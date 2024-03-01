@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+set -x
+
+rm -rvf ${TMP_DIR}
+rm -rvf ${BIN_DIR}
+
+source .environment
+
+mkdir -p ${REPO_DIR}/{bin,tmp}
+
+curl -L -o ${DIRENV_BIN} "${DIRENV_DL_URL}"
+chmod +x ${DIRENV_BIN}
+
+mkdir ${DAGU_TMP_DIR}
+mkdir -p ${DAGU_DL_DIR}
+curl -L -o ${DAGU_DL_TGZ} "${DAGU_DL_URL}"
+tar -xf ${DAGU_DL_TGZ} --directory ${DAGU_DL_DIR}
+ln -s ${DAGU_DL_BIN} ${DAGU_BIN}
+mkdir -p ${DAGU_LOG_DIR}
+mkdir -p ${DAGU_DATA_DIR}
+mkdir -p ${DAGU_DAGS}
+${DAGU_CMD} --host=${DAGU_HOST} --port=${DAGU_PORT} --dags=${DAGU_DAGS} --config=${DAGU_BASE_CONFIG}

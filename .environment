@@ -1,0 +1,27 @@
+REPO_DIR=$(pwd)
+
+BIN_DIR="${REPO_DIR}/bin"
+TMP_DIR="${REPO_DIR}/tmp"
+
+DIRENV_DL_URL='https://github.com/direnv/direnv/releases/download/v2.34.0/direnv.linux-amd64'
+DIRENV_BIN="${REPO_DIR}/bin/direnv"
+
+DAGU_DL_URL='https://github.com/dagu-dev/dagu/releases/download/v1.12.9/dagu_1.12.9_linux_amd64.tar.gz'
+DAGU_TMP_DIR="${REPO_DIR}/tmp/dagu"
+DAGU_DL_DIR="${DAGU_TMP_DIR}/dl"
+DAGU_DL_BIN="${DAGU_DL_DIR}/dagu"
+DAGU_DL_TGZ="${DAGU_DL_BIN}.tar.tgz"
+DAGU_BIN="${BIN_DIR}/dagu"
+DAGU_HTTP_HOST='127.0.0.1'
+DAGU_HTTP_PORT='8888'
+DAGU_CMD="${DAGU_BIN} server"
+
+export DAGU_LOG_DIR="${DAGU_TMP_DIR}/logs"
+export DAGU_ADMIN_LOG_DIR=${DAGU_LOG_DIR}
+export DAGU_DATA_DIR="${DAGU_TMP_DIR}/data"
+export DAGU_DAGS="${REPO_DIR}/dags"
+export DAGU_BASE_CONFIG="${REPO_DIR}/dags.yaml"
+export DAGU_HOST=${DAGU_HTTP_HOST}
+export DAGU_PORT=${DAGU_HTTP_PORT}
+export DAGU_WORK_DIR="${REPO_DIR}/work_dir"
+export DAGU_NAVBAR_TITLE="GCP"
