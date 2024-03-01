@@ -1,0 +1,3 @@
+steps:
+  - name: "gcloud_config_list"
+    command: gcloud config list
