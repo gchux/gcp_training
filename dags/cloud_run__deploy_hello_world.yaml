@@ -1,3 +1,5 @@
+group: cloud_run
+tags: cloud_run,step_1
 env:
   - DAG_NAME: cloud_run__deploy_hello_world
   - GCP_PROJECT: ${GOOGLE_CLOUD_PROJECT}
