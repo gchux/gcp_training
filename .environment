@@ -23,5 +23,5 @@ export DAGU_DAGS="${REPO_DIR}/dags"
 export DAGU_BASE_CONFIG="${REPO_DIR}/dags.yaml"
 export DAGU_HOST=${DAGU_HTTP_HOST}
 export DAGU_PORT=${DAGU_HTTP_PORT}
-export DAGU_WORK_DIR="${REPO_DIR}/work_dir"
+export DAGU_WORK_DIR="${DAGU_TMP_DIR}/work_dir"
 export DAGU_NAVBAR_TITLE="GCP"
