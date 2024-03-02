@@ -6,6 +6,13 @@ TMP_DIR="${REPO_DIR}/tmp"
 DIRENV_DL_URL='https://github.com/direnv/direnv/releases/download/v2.34.0/direnv.linux-amd64'
 DIRENV_BIN="${REPO_DIR}/bin/direnv"
 
+TASK_DL_URL='https://github.com/go-task/task/releases/download/v3.35.0/task_linux_amd64.tar.gz'
+TASK_TMP_DIR="${REPO_DIR}/tmp/task"
+TASK_DL_TGZ="${TASK_TMP_DIR}/task.tar.gz"
+TASK_TMP_BIN="${TASK_TMP_DIR}/task"
+TASK_BIN="${BIN_DIR}/task"
+export _TASKS_DIR="${REPO_DIR}/tasks"
+
 DAGU_DL_URL='https://github.com/dagu-dev/dagu/releases/download/v1.12.9/dagu_1.12.9_linux_amd64.tar.gz'
 DAGU_TMP_DIR="${REPO_DIR}/tmp/dagu"
 DAGU_DL_DIR="${DAGU_TMP_DIR}/dl"
@@ -23,5 +30,6 @@ export DAGU_DAGS="${REPO_DIR}/dags"
 export DAGU_BASE_CONFIG="${REPO_DIR}/dags.yaml"
 export DAGU_HOST=${DAGU_HTTP_HOST}
 export DAGU_PORT=${DAGU_HTTP_PORT}
-export DAGU_WORK_DIR="${DAGU_TMP_DIR}/work_dir"
+export _WORK_DIR="${DAGU_TMP_DIR}/work_dir"
+export DAGU_WORK_DIR=${_WORK_DIR}
 export DAGU_NAVBAR_TITLE="GCP"

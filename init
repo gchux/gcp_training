@@ -4,15 +4,20 @@ gcloud auth login
 
 set -x
 
-rm -rf ${TMP_DIR}
-rm -rf ${BIN_DIR}
-
 source .environment
+
+rm -rvf ${TMP_DIR}
+rm -rvf ${BIN_DIR}
 
 mkdir -p ${REPO_DIR}/{bin,tmp}
 
 curl -L -o ${DIRENV_BIN} "${DIRENV_DL_URL}"
 chmod +x ${DIRENV_BIN}
+
+mkdir ${TASK_TMP_DIR}
+curl -L -o ${TASK_DL_TGZ} "${TASK_DL_URL}"
+tar -xf ${TASK_DL_TGZ} --directory ${TASK_TMP_DIR}
+ln -s ${TASK_TMP_BIN} ${TASK_BIN}
 
 mkdir ${DAGU_TMP_DIR}
 mkdir -p ${DAGU_DL_DIR}
@@ -22,4 +27,7 @@ ln -s ${DAGU_DL_BIN} ${DAGU_BIN}
 mkdir -p ${DAGU_LOG_DIR}
 mkdir -p ${DAGU_DATA_DIR}
 mkdir -p ${DAGU_WORK_DIR}
-${DAGU_CMD} --host=${DAGU_HOST} --port=${DAGU_PORT} --dags=${DAGU_DAGS} --config=${DAGU_BASE_CONFIG}
+
+export PATH=${BIN_DIR}:${PATH}
+
+exec env ${DAGU_CMD} --host=${DAGU_HOST} --port=${DAGU_PORT} --dags=${DAGU_DAGS} --config=${DAGU_BASE_CONFIG}
