@@ -5,7 +5,7 @@ env:
   - GIT_REPO: https://github.com/GoogleCloudPlatform/python-docs-samples.git
   - GIT_REPO_DIR: ${DAG_WORK_DIR}/python-docs-samples/run/helloworld
   - CONTAINER_IMAGE: gcr.io/${GCP_PROJECT}/helloworld
-params: GCP_PROJECT=gcp_project RUN_REGION=run_region RUN_SERVICE=run_service
+params: GCP_PROJECT=<gcp_project> RUN_REGION=us-central1 RUN_SERVICE=hello_world
 steps:
   - name: "clean_work_dir"
     command: rm -rf ${DAG_WORK_DIR}
