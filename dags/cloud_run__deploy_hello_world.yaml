@@ -3,47 +3,46 @@ tags: cloud_run,step_1
 env:
   - _NAMESPACE: cloud_run
   - _TARGET: deploy_hello_world
-  - _DAG_NAME: ${_NAMESPACE}/${_TARGET}
+  - _DAG_NAME: ${_NAMESPACE}__${_TARGET}
   - _DAG_WORK_DIR: ${_WORK_DIR}/${_DAG_NAME}
-  - _TASK_FILE: ${TASKS_DIR}/${_DAG_NAME}
-  - _TASK_CMD: task --taskfile ${TASK_FILE} --dir ${DAG_WORK_DIR}
+  - _TASK_FILE: ${_TASKS_DIR}/${_NAMESPACE}/${_TARGET}/Taskfile.yaml
+  - _TASK_CMD: task -t ${_TASK_FILE} -v
+  - _RUN_CMD: ${_DAG_WORK_DIR}/run
   - GCP_PROJECT: ${GOOGLE_CLOUD_PROJECT}
-  - GIT_REPO: https://github.com/GoogleCloudPlatform/python-docs-samples.git
+  - GIT_REPO_URL: https://github.com/GoogleCloudPlatform/python-docs-samples.git
   - GIT_REPO_DIR: ${_DAG_WORK_DIR}/python-docs-samples/run/helloworld
-  - CONTAINER_IMAGE: gcr.io/${GCP_PROJECT}/helloworld
-params: GCP_PROJECT=<gcp_project> RUN_REGION=us-central1 RUN_SERVICE=hello_world
+params: GCP_PROJECT=<gcp_project> RUN_REGION=us-central1 RUN_SERVICE=helloworld
 steps:
-  - name: "clean_work_dir"
-    command: rm -rf ${_DAG_WORK_DIR}
-  - name: "create_work_dir"
-    command: mkdir -p ${_DAG_WORK_DIR}
-    depends:
-      - clean_work_dir
-  - name: "clone_github_repo"
+  - name: "prepare_work_dir"
+    command: bash
+    script: |
+      rm -rf ${_DAG_WORK_DIR}
+      mkdir -p ${_DAG_WORK_DIR}
+      echo -e "#!/bin/bash\n${_TASK_CMD} \$1 TASK_DIR=\$2 \$3" > ${_RUN_CMD}
+      chmod +x ${_RUN_CMD}
+  - name: "clone_git_repo"
     dir: ${_DAG_WORK_DIR}
-    command: ${_TASK_CMD} clone_github_repo
+    command: ./run clone_git_repo ${_DAG_WORK_DIR} "GIT_REPO_URL=${GIT_REPO_URL}"
     depends:
-      - create_work_dir
+      - prepare_work_dir
   - name: "set_gcp_project"
-    command: gcloud config set project ${GCP_PROJECT}
+    dir: ${_DAG_WORK_DIR}
+    command: ./run set_gcp_project ${_DAG_WORK_DIR} "GCP_PROJECT=${GCP_PROJECT}"
+    depends:
+      - prepare_work_dir
   - name: "create_container_image"
-    dir: ${GIT_REPO_DIR}
-    command: gcloud builds submit --pack image=gcr.io/${GCP_PROJECT}/${RUN_SERVICE} --project=${GCP_PROJECT}
+    dir: ${_DAG_WORK_DIR}
+    command: ./run create_container_image ${GIT_REPO_DIR} "GCP_PROJECT=${GCP_PROJECT} RUN_SERVICE=${RUN_SERVICE}"
     depends:
+      - clone_git_repo
       - set_gcp_project
-      - clone_github_repo
-  - name: "deploy_revision"
-    dir: ${GIT_REPO_DIR}
-    command: gcloud run deploy ${RUN_SERVICE} --image=gcr.io/${GCP_PROJECT}/${RUN_SERVICE} --concurrency=1 --max-instances=1 --region=${RUN_REGION} --project=${GCP_PROJECT}
+  - name: "deploy_run_revision"
+    dir: ${_DAG_WORK_DIR}
+    command: ./run deploy_run_revision ${_DAG_WORK_DIR} "GCP_PROJECT=${GCP_PROJECT} RUN_SERVICE=${RUN_SERVICE} RUN_REGION=${RUN_REGION}"
     depends:
-      - set_gcp_project
-      - clone_github_repo
       - create_container_image
   - name: "describe_run_service"
-    dir: ${GIT_REPO_DIR}
-    command: gcloud run services describe ${RUN_SERVICE} --region=${RUN_REGION} --project=${GCP_PROJECT} --format=flattened
+    dir: ${_DAG_WORK_DIR}
+    command: ./run describe_run_revision ${_DAG_WORK_DIR} "GCP_PROJECT=${GCP_PROJECT} RUN_SERVICE=${RUN_SERVICE} RUN_REGION=${RUN_REGION}"
     depends:
-      - set_gcp_project
-      - clone_github_repo
-      - create_container_image
-      - deploy_revision
+      - deploy_run_revision

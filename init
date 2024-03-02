@@ -6,8 +6,8 @@ set -x
 
 source .environment
 
-rm -rvf ${TMP_DIR}
-rm -rvf ${BIN_DIR}
+rm -rf ${TMP_DIR}
+rm -rf ${BIN_DIR}
 
 mkdir -p ${REPO_DIR}/{bin,tmp}
 
