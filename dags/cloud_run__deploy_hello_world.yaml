@@ -27,7 +27,7 @@ steps:
       - set_gcp_project
       - clone_github_repo
   - name: "deploy_revision"
-    command: gcloud run deploy ${RUN_SERVICE} --image=gcr.io/${GCP_PROJECT}/${RUN_SERVICE} --concurrency=1 --max-instances=1 --region=${RUN_REGION} --log-http --verbosity=debug --project=${GCP_PROJECT}
+    command: gcloud run deploy ${RUN_SERVICE} --image=gcr.io/${GCP_PROJECT}/${RUN_SERVICE} --concurrency=1 --max-instances=1 --region=${RUN_REGION} --project=${GCP_PROJECT}
     depends:
       - set_gcp_project
       - clone_github_repo
