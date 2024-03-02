@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 
+gcloud auth login
+
 set -x
 
-rm -rvf ${TMP_DIR}
-rm -rvf ${BIN_DIR}
+rm -rf ${TMP_DIR}
+rm -rf ${BIN_DIR}
+rm -rf ${DAGU_WORK_DIR}
 
 source .environment
 
@@ -19,5 +22,5 @@ tar -xf ${DAGU_DL_TGZ} --directory ${DAGU_DL_DIR}
 ln -s ${DAGU_DL_BIN} ${DAGU_BIN}
 mkdir -p ${DAGU_LOG_DIR}
 mkdir -p ${DAGU_DATA_DIR}
-mkdir -p ${DAGU_DAGS}
+mkdir -p ${DAGU_WORK_DIR}
 ${DAGU_CMD} --host=${DAGU_HOST} --port=${DAGU_PORT} --dags=${DAGU_DAGS} --config=${DAGU_BASE_CONFIG}
