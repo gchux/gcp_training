@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-gcloud auth login
+gcloud projects list --limit=5
 
 set -x
 
