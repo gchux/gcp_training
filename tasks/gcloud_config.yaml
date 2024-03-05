@@ -1,0 +1,17 @@
+version: '3'
+
+vars:
+  GCLOUD_CMD: 'gcloud config'
+
+tasks:
+
+  default:
+    cmds:
+      - echo '{{.GCLOUD_CMD}} ...'
+
+  set_project:
+    requires:
+      vars: [TASK_DIR, GCP_PROJECT]
+    dir: '{{.TASK_DIR}}'
+    cmds:
+      - cmd: '{{.GCLOUD_CMD}} set project {{.GCP_PROJECT}}'
