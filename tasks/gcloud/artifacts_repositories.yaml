@@ -1,0 +1,33 @@
+version: '3'
+
+vars:
+  GCLOUD_CMD: 'gcloud artifacts repositories'
+
+tasks:
+
+  default:
+    cmds:
+      - echo '{{.GCLOUD_CMD}} ...'
+
+  create_if_not_exists:
+    requires:
+      vars: [GCP_PROJECT, REPO_NAME, REPO_LOCATION, REPO_FORMAT, REPO_DESCRIPTION]
+    dir: '{{.USER_WORKING_DIR}}'
+    vars: 
+      REPO_EXISTS: 
+        sh: "gcloud artifacts repositories list --location={{.REPO_LOCATION}} --project={{.GCP_PROJECT}} --format='json(name)' --filter='name~/{{.REPO_NAME}}$' | jq '. | length'"
+    cmds:
+      - cmd: '[ {{.REPO_EXISTS}} = 0 ] && {{.GCLOUD_CMD}} create {{.REPO_NAME}} --repository-format={{.REPO_FORMAT}} --location={{.REPO_LOCATION}} --description="{{.REPO_DESCRIPTION}}" --project={{.GCP_PROJECT}} --format=json || echo "already exists: projects/{{.GCP_PROJECT}}/locations/{{.REPO_LOCATION}}/repositories/{{.REPO_NAME}}"'
+
+  create:
+    requires:
+      vars: [GCP_PROJECT, REPO_NAME, REPO_LOCATION, REPO_FORMAT, REPO_DESCRIPTION]
+    dir: '{{.USER_WORKING_DIR}}'
+    vars: 
+      REPO_EXISTS: 
+        sh: "gcloud artifacts repositories list --location={{.REPO_LOCATION}} --project={{.GCP_PROJECT}} --format='json(name)' --filter='name~/{{.REPO_NAME}}$' | jq '. | length'"
+    cmds:
+      - cmd: '{{.GCLOUD_CMD}} create {{.REPO_NAME}} --repository-format={{.REPO_FORMAT}} --location={{.REPO_LOCATION}} --description="{{.REPO_DESCRIPTION}}" --project={{.GCP_PROJECT}} --format=json'
+    preconditions:
+      - sh: '[ {{.REPO_EXISTS}} = 1 ]'
+        msg: "'projects/{{.GCP_PROJECT}}/locations/{{.REPO_LOCATION}}/repositories/{{.REPO_NAME}}' already exists"

@@ -11,7 +11,7 @@ tasks:
 
   set_project:
     requires:
-      vars: [TASK_DIR, GCP_PROJECT]
-    dir: '{{.TASK_DIR}}'
+      vars: [GCP_PROJECT]
+    dir: '{{.USER_WORKING_DIR}}'
     cmds:
       - cmd: '{{.GCLOUD_CMD}} set project {{.GCP_PROJECT}}'
