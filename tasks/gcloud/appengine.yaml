@@ -1,0 +1,45 @@
+version: '3'
+
+includes:
+  gcloud_app_services:
+    taskfile: "appengine_services.yaml"
+    aliases: [app_services]
+  gcloud_app_versions:
+    taskfile: "appengine_versions.yaml"
+    aliases: [app_versions]
+
+vars:
+  APP_CMD: 'gcloud app'
+
+tasks:
+
+  default:
+    cmds:
+      - echo '{{.APP_CMD}} ...'
+
+  deploy:
+    requires:
+      vars: [GCP_PROJECT]
+    vars:
+      _SOURCE: '{{.USER_WORKING_DIR}}'
+      _APP_YAML_FNAME: '{{.APP_YAML_FNAME | default "app.yaml"}}'
+      _APP_YAML_PATH: '{{.GAE_YAML | default | list ._SOURCE ._APP_YAML_FNAME | join "/"}}'
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds:
+      - >-
+        {{.APP_CMD}} deploy {{._SOURCE}}
+        {{if .IMAGE_URL}}--image-url={{.IMAGE_URL}}{{end}}
+        --appyaml={{._APP_YAML_PATH}}
+        --project={{.GCP_PROJECT}}
+
+  describe:
+    requires:
+      vars: [GCP_PROJECT]
+    vars:
+      _FORMAT: '{{.FORMAT | default "json"}}'
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds:
+      - >-
+        {{.APP_CMD}} describe
+        --format={{._FORMAT}}
+        --project={{.GCP_PROJECT}}

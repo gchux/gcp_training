@@ -1,0 +1,47 @@
+version: '3'
+
+vars:
+  GCLOUD_CMD: 'gcloud functions'
+
+tasks:
+
+  default:
+    cmds:
+      - echo '{{.GCLOUD_CMD}} ...'
+
+  deploy:
+    requires:
+      vars: [GCP_PROJECT, FN_NAME, FN_REGION, FN_RUNTIME, FN_TRIGGER]
+    vars:
+      _GENERATION: '{{.FN_GENERATION | default "2"}}'
+      _CONCURRENCY: '{{.FN_CONCURRENCY | default "1"}}'
+      _ENTRYPOINT: '{{.FN_ENTRYPOINT | default .FN_NAME}}'
+      _TRIGGER: '{{.FN_TRIGGER | default "http"}}'
+      _SOURCE: '{{.USER_WORKING_DIR}}'
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds:
+      - >-
+        {{.GCLOUD_CMD}} deploy {{.FN_NAME}}
+        --region={{.FN_REGION}}
+        --runtime={{.FN_RUNTIME}}
+        --source={{._SOURCE}}
+        --entry-point={{._ENTRYPOINT}}
+        {{if eq ._GENERATION "2"}}--gen2{{else}}--no-gen2{{end}}
+        {{if eq ._GENERATION "2"}}--concurrency={{._CONCURRENCY}}{{end}}
+        --trigger-{{._TRIGGER}}
+        {{if eq ._GENERATION "1"}}--security-level=secure-always{{end}}
+        --no-allow-unauthenticated
+        --project={{.GCP_PROJECT}}
+
+  describe:
+    requires:
+      vars: [GCP_PROJECT, FN_NAME, FN_REGION]
+    vars:
+      _FORMAT: '{{.FORMAT | default "json"}}'
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds:
+      - >-
+        {{.GCLOUD_CMD}} describe {{.FN_NAME}}
+        --region={{.FN_REGION}}
+        --project={{.GCP_PROJECT}}
+        --format={{._FORMAT}}

@@ -1,8 +1,8 @@
-group: cloud_run
-tags: cloud_run,step_1
-description: https://cloud.google.com/run/docs/quickstarts/build-and-deploy/deploy-python-service
+group: appengine_flx
+tags: appengine_flx,step_1
+description: https://cloud.google.com/appengine/docs/flexible/python/create-app
 env:
-  - _NAMESPACE: cloud_run
+  - _NAMESPACE: appengine
   - _TARGET: deploy_hello_world
   - _DAG_NAME: ${_NAMESPACE}__${_TARGET}
   - _DAG_WORK_DIR: ${_WORK_DIR}/${_DAG_NAME}
@@ -12,8 +12,10 @@ env:
   - GCP_PROJECT: ${GOOGLE_CLOUD_PROJECT}
   - GIT_REPO_URL: https://github.com/GoogleCloudPlatform/python-docs-samples.git
   - GIT_ROOT_DIR: ${_DAG_WORK_DIR}/python-docs-samples
-  - GIT_REPO_DIR: ${GIT_ROOT_DIR}/run/helloworld
-params: GCP_PROJECT=<gcp_project> GCP_SERVICES=run,cloudbuild RUN_REGION=us-central1 RUN_SERVICE=helloworld
+  - GIT_REPO_DIR: ${GIT_ROOT_DIR}/appengine/flexible/hello_world
+params: >-
+  GCP_PROJECT=<gcp_project>
+  GCP_SERVICES=cloudbuild,artifactregistry,appenginestandard,appengineflex
 steps:
   - name: prepare_work_dir
     command: bash
@@ -38,19 +40,14 @@ steps:
     command: run ${_DAG_NAME} enable_services "GCP_PROJECT=${GCP_PROJECT} GCP_SERVICES=${GCP_SERVICES}"
     depends:
       - set_gcp_project
-  - name: create_container_image
+  - name: deploy_app
     dir: ${GIT_REPO_DIR}
-    command: run ${_DAG_NAME} create_container_image "GCP_PROJECT=${GCP_PROJECT} RUN_SERVICE=${RUN_SERVICE}"
+    command: run ${_DAG_NAME} deploy_app "GCP_PROJECT=${GCP_PROJECT}"
     depends:
       - clone_git_repo
       - enable_services
-  - name: deploy_run_revision
-    dir: ${_DAG_WORK_DIR}
-    command: run ${_DAG_NAME} deploy_run_revision "GCP_PROJECT=${GCP_PROJECT} RUN_SERVICE=${RUN_SERVICE} RUN_REGION=${RUN_REGION}"
+  - name: describe_app
+    dir: ${GIT_REPO_DIR}
+    command: run ${_DAG_NAME} describe_service "GCP_PROJECT=${GCP_PROJECT} GAE_SERVICE=default"
     depends:
-      - create_container_image
-  - name: describe_run_service
-    dir: ${_DAG_WORK_DIR}
-    command: run ${_DAG_NAME} describe_run_revision "GCP_PROJECT=${GCP_PROJECT} RUN_SERVICE=${RUN_SERVICE} RUN_REGION=${RUN_REGION}"
-    depends:
-      - deploy_run_revision
+      - deploy_app

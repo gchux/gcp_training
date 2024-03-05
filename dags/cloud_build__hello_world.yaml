@@ -1,19 +1,19 @@
-group: cloud_run
-tags: cloud_run,step_1
-description: https://cloud.google.com/run/docs/quickstarts/build-and-deploy/deploy-python-service
+group: cloud_build
+tags: cloud_build,step_1
+description: https://cloud.google.com/build/docs/build-push-docker-image
 env:
-  - _NAMESPACE: cloud_run
-  - _TARGET: deploy_hello_world
+  - _NAMESPACE: cloud_build
+  - _TARGET: submit_hello_world
   - _DAG_NAME: ${_NAMESPACE}__${_TARGET}
   - _DAG_WORK_DIR: ${_WORK_DIR}/${_DAG_NAME}
   - _TASK_FILE: ${_TASKS_DIR}/${_NAMESPACE}/${_TARGET}.yaml
   - _TASK_CMD: task -t ${_TASK_FILE} -v
   - _DAG_CMD: ${_BIN_DIR}/${_DAG_NAME}
   - GCP_PROJECT: ${GOOGLE_CLOUD_PROJECT}
-  - GIT_REPO_URL: https://github.com/GoogleCloudPlatform/python-docs-samples.git
-  - GIT_ROOT_DIR: ${_DAG_WORK_DIR}/python-docs-samples
-  - GIT_REPO_DIR: ${GIT_ROOT_DIR}/run/helloworld
-params: GCP_PROJECT=<gcp_project> GCP_SERVICES=run,cloudbuild RUN_REGION=us-central1 RUN_SERVICE=helloworld
+  - GIT_REPO_URL: https://github.com/GoogleCloudPlatform/cloud-build-samples.git
+  - GIT_ROOT_DIR: ${_DAG_WORK_DIR}/cloud-build-samples
+  - GIT_REPO_DIR: ${GIT_ROOT_DIR}/quickstart-build
+params: GCP_PROJECT=<gcp_project> GCP_SERVICES=cloudbuild,artifactregistry REPO_NAME=quickstart-docker-repo REPO_LOCATION=us-west2 IMAGE_NAME=quickstart-image
 steps:
   - name: prepare_work_dir
     command: bash
@@ -38,19 +38,19 @@ steps:
     command: run ${_DAG_NAME} enable_services "GCP_PROJECT=${GCP_PROJECT} GCP_SERVICES=${GCP_SERVICES}"
     depends:
       - set_gcp_project
+  - name: create_docker_repository
+    dir: ${_DAG_WORK_DIR}
+    command: run ${_DAG_NAME} create_docker_repository "GCP_PROJECT=${GCP_PROJECT} REPO_NAME=${REPO_NAME} REPO_LOCATION=${REPO_LOCATION} REPO_FORMAT=${REPO_FORMAT}"
+    depends:
+      - enable_services
   - name: create_container_image
     dir: ${GIT_REPO_DIR}
-    command: run ${_DAG_NAME} create_container_image "GCP_PROJECT=${GCP_PROJECT} RUN_SERVICE=${RUN_SERVICE}"
+    command: run ${_DAG_NAME} create_container_image "GCP_PROJECT=${GCP_PROJECT} REPO_NAME=${REPO_NAME} REPO_LOCATION=${REPO_LOCATION} IMAGE_NAME=${IMAGE_NAME}"
     depends:
       - clone_git_repo
-      - enable_services
-  - name: deploy_run_revision
-    dir: ${_DAG_WORK_DIR}
-    command: run ${_DAG_NAME} deploy_run_revision "GCP_PROJECT=${GCP_PROJECT} RUN_SERVICE=${RUN_SERVICE} RUN_REGION=${RUN_REGION}"
+      - create_docker_repository
+  - name: run_container_image
+    dir: ${GIT_REPO_DIR}
+    command: run ${_DAG_NAME} run_container_image "GCP_PROJECT=${GCP_PROJECT} REPO_NAME=${REPO_NAME} REPO_LOCATION=${REPO_LOCATION} IMAGE_NAME=${IMAGE_NAME}"
     depends:
       - create_container_image
-  - name: describe_run_service
-    dir: ${_DAG_WORK_DIR}
-    command: run ${_DAG_NAME} describe_run_revision "GCP_PROJECT=${GCP_PROJECT} RUN_SERVICE=${RUN_SERVICE} RUN_REGION=${RUN_REGION}"
-    depends:
-      - deploy_run_revision

@@ -1,8 +1,8 @@
-group: cloud_run
-tags: cloud_run,step_1
-description: https://cloud.google.com/run/docs/quickstarts/build-and-deploy/deploy-python-service
+group: cloud_functions_gen2
+tags: cloud_functions_gen2,step_1
+description: https://cloud.google.com/functions/docs/create-deploy-http-nodejs-1st-gen
 env:
-  - _NAMESPACE: cloud_run
+  - _NAMESPACE: cloud_functions
   - _TARGET: deploy_hello_world
   - _DAG_NAME: ${_NAMESPACE}__${_TARGET}
   - _DAG_WORK_DIR: ${_WORK_DIR}/${_DAG_NAME}
@@ -12,8 +12,14 @@ env:
   - GCP_PROJECT: ${GOOGLE_CLOUD_PROJECT}
   - GIT_REPO_URL: https://github.com/GoogleCloudPlatform/python-docs-samples.git
   - GIT_ROOT_DIR: ${_DAG_WORK_DIR}/python-docs-samples
-  - GIT_REPO_DIR: ${GIT_ROOT_DIR}/run/helloworld
-params: GCP_PROJECT=<gcp_project> GCP_SERVICES=run,cloudbuild RUN_REGION=us-central1 RUN_SERVICE=helloworld
+  - GIT_REPO_DIR: ${GIT_ROOT_DIR}/functions/helloworld
+params: >-
+  GCP_PROJECT=<gcp_project>
+  GCP_SERVICES=cloudbuild,artifactregistry,cloudfunctions
+  FN_NAME=python-http-function
+  FN_REGION=us-central1
+  FN_RUNTIME=python312
+  FN_ENTRYPOINT=hello_get
 steps:
   - name: prepare_work_dir
     command: bash
@@ -38,19 +44,14 @@ steps:
     command: run ${_DAG_NAME} enable_services "GCP_PROJECT=${GCP_PROJECT} GCP_SERVICES=${GCP_SERVICES}"
     depends:
       - set_gcp_project
-  - name: create_container_image
+  - name: deploy_function
     dir: ${GIT_REPO_DIR}
-    command: run ${_DAG_NAME} create_container_image "GCP_PROJECT=${GCP_PROJECT} RUN_SERVICE=${RUN_SERVICE}"
+    command: run ${_DAG_NAME} deploy_function "GCP_PROJECT=${GCP_PROJECT} FN_GENERATION=2 FN_NAME=${FN_NAME} FN_REGION=${FN_REGION} FN_RUNTIME=${FN_RUNTIME} FN_TRIGGER=http FN_ENTRYPOINT=${FN_ENTRYPOINT}"
     depends:
       - clone_git_repo
       - enable_services
-  - name: deploy_run_revision
-    dir: ${_DAG_WORK_DIR}
-    command: run ${_DAG_NAME} deploy_run_revision "GCP_PROJECT=${GCP_PROJECT} RUN_SERVICE=${RUN_SERVICE} RUN_REGION=${RUN_REGION}"
+  - name: describe_function
+    dir: ${GIT_REPO_DIR}
+    command: run ${_DAG_NAME} describe_function "GCP_PROJECT=${GCP_PROJECT} FN_NAME=${FN_NAME} FN_REGION=${FN_REGION}"
     depends:
-      - create_container_image
-  - name: describe_run_service
-    dir: ${_DAG_WORK_DIR}
-    command: run ${_DAG_NAME} describe_run_revision "GCP_PROJECT=${GCP_PROJECT} RUN_SERVICE=${RUN_SERVICE} RUN_REGION=${RUN_REGION}"
-    depends:
-      - deploy_run_revision
+      - deploy_function
