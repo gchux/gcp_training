@@ -9,10 +9,10 @@ includes:
     taskfile: "../gcloud/config.yaml"
   gcloud_services: 
     taskfile: "../gcloud/services.yaml"
-  gcloud_builds: 
-    taskfile: "../gcloud/builds.yaml"
   gcloud_artifacts_repositories: 
     taskfile: "../gcloud/artifacts_repositories.yaml"
+  gcloud_builds: 
+    taskfile: "../gcloud/builds.yaml"
 
 tasks:
 

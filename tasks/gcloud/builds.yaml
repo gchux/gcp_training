@@ -14,15 +14,23 @@ tasks:
       vars: [GCP_PROJECT, IMAGE_TAG]
     dir: '{{.USER_WORKING_DIR}}'
     vars:
-      TASK_DIR: '{{.USER_WORKING_DIR}}'
+      BUILD_DIR: '{{.USER_WORKING_DIR}}'
     cmds:
-      - cmd: '{{.GCLOUD_CMD}} submit {{.TASK_DIR}} --pack image={{.IMAGE_TAG}} --dir={{.TASK_DIR}} --project={{.GCP_PROJECT}}'
+      - >-
+        {{.GCLOUD_CMD}} submit {{.BUILD_DIR}}
+        --pack='image={{.IMAGE_TAG}}'
+        --dir={{.BUILD_DIR}}
+        --project={{.GCP_PROJECT}}
 
   submit_using_tag:
     requires:
       vars: [GCP_PROJECT, IMAGE_TAG]
     dir: '{{.USER_WORKING_DIR}}'
     vars:
-      TASK_DIR: '{{.USER_WORKING_DIR}}'
+      BUILD_DIR: '{{.USER_WORKING_DIR}}'
     cmds:
-      - cmd: '{{.GCLOUD_CMD}} submit {{.TASK_DIR}} --tag={{.IMAGE_TAG}} --dir={{.TASK_DIR}} --project={{.GCP_PROJECT}}'
+      - >-
+        {{.GCLOUD_CMD}} submit {{.BUILD_DIR}}
+        --tag={{.IMAGE_TAG}}
+        --dir={{.BUILD_DIR}}
+        --project={{.GCP_PROJECT}}

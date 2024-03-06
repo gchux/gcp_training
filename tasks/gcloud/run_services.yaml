@@ -16,4 +16,8 @@ tasks:
       _FORMAT: '{{.FORMAT | default "json"}}'
     dir: '{{.USER_WORKING_DIR}}'
     cmds:
-      - cmd: '{{._GCLOUD_CMD}} describe {{.RUN_SERVICE}} --region={{.RUN_REGION}} --project={{.GCP_PROJECT}} --format={{._FORMAT}}'
+      - >-
+        {{._GCLOUD_CMD}} describe {{.RUN_SERVICE}}
+        --region={{.RUN_REGION}}
+        --project={{.GCP_PROJECT}}
+        --format={{._FORMAT}}

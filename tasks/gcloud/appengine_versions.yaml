@@ -1,0 +1,24 @@
+version: '3'
+
+vars:
+  APP_VERSIONS_CMD: 'gcloud app versions'
+
+tasks:
+
+  default:
+    cmds:
+      - echo '{{.APP_VERSIONS_CMD}} ...'
+
+  describe:
+    requires:
+      vars: [GCP_PROJECT, GAE_SERVICE, GAE_VERSION]
+    vars:
+      _FORMAT: '{{.FORMAT | default "json"}}'
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds:
+      - >-
+        {{.APP_VERSIONS_CMD}} describe
+        {{.GAE_VERSION}}
+        --service={{.GAE_SERVICE}}
+        --format={{._FORMAT}}
+        --project={{.GCP_PROJECT}}

@@ -23,4 +23,11 @@ tasks:
       _MAX_INSTANCES: '{{.REVISION__MAX_INSTANCES | default "1"}}'
     dir: '{{.USER_WORKING_DIR}}'
     cmds:
-      - cmd: '{{.GCLOUD_CMD}} deploy {{.RUN_SERVICE}} --image={{.IMAGE_TAG}} --concurrency={{._CONCURRENCY}} --min-instances={{._MIN_INSTANCES}} --max-instances={{._MAX_INSTANCES}} --region={{.RUN_REGION}} --project={{.GCP_PROJECT}}'
+      - >-
+        {{.GCLOUD_CMD}} deploy {{.RUN_SERVICE}}
+        --image={{.IMAGE_TAG}}
+        --concurrency={{._CONCURRENCY}}
+        --min-instances={{._MIN_INSTANCES}}
+        --max-instances={{._MAX_INSTANCES}}
+        --region={{.RUN_REGION}}
+        --project={{.GCP_PROJECT}}

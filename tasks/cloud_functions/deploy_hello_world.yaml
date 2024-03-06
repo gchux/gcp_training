@@ -1,0 +1,53 @@
+version: '3'
+
+includes:
+  git:
+    taskfile: "../common/git.yaml"
+  gcloud_config: 
+    taskfile: "../gcloud/config.yaml"
+  gcloud_services: 
+    taskfile: "../gcloud/services.yaml"
+  gcloud_functions: 
+    taskfile: "../gcloud/functions.yaml"
+
+tasks:
+
+  clone_git_repo:
+    requires:
+      vars: [GIT_REPO_URL, GIT_REPO_DIR]
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds: 
+      - task: git:clone
+
+  set_gcp_project:
+    requires:
+      vars: [GCP_PROJECT]
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds: 
+      - task: gcloud_config:set_project
+
+  enable_services:
+    requires:
+      vars: [GCP_PROJECT, GCP_SERVICES]
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds: 
+      - task: gcloud_services:enable
+        vars:
+          SERVICES: '{{.GCP_SERVICES}}'
+
+  deploy_function:
+    requires:
+      vars: [GCP_PROJECT, FN_GENERATION, FN_NAME, FN_REGION, FN_RUNTIME]
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds: 
+      - task: gcloud_functions:deploy
+
+  describe_function:
+    requires:
+      vars: [GCP_PROJECT, FN_NAME, FN_REGION]
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds:
+      - task: gcloud_functions:describe
+        vars:
+          FORMAT: flattened
+
