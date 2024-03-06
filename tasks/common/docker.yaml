@@ -19,3 +19,23 @@ tasks:
         vars:
           IMAGE_TAG: '{{.IMAGE_TAG}}'
       - cmd: 'docker run -t --rm {{.IMAGE_TAG}}'
+
+  build_image_no_cache:
+    requires:
+      vars: [IMAGE_TAG]
+    dir: '{{.USER_WORKING_DIR}}'
+    vars:
+      _SOURCE: '{{.USER_WORKING_DIR}}'
+    cmds: 
+      - task: remove_image
+        ignore_error: true
+        vars:
+          IMAGE_TAG: '{{.IMAGE_TAG}}'
+      - cmd: 'docker build --no-cache -t {{.IMAGE_TAG}} {{._SOURCE}}'
+
+  push_image:
+    requires:
+      vars: [IMAGE_TAG]
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds: 
+      - cmd: 'docker push {{.IMAGE_TAG}}'

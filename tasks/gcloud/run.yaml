@@ -18,9 +18,20 @@ tasks:
     requires:
       vars: [GCP_PROJECT, RUN_SERVICE, RUN_REGION, IMAGE_TAG]
     vars:
-      _CONCURRENCY: '{{.REVISION__CONCURRENCY | default "1"}}'
-      _MIN_INSTANCES: '{{.REVISION__MAX_INSTANCES | default "0"}}'
-      _MAX_INSTANCES: '{{.REVISION__MAX_INSTANCES | default "1"}}'
+      _CONCURRENCY: '{{.CONCURRENCY | default "1"}}'
+      _MIN_INSTANCES: '{{.MIX_INSTANCES | default "0"}}'
+      _MAX_INSTANCES: '{{.MAX_INSTANCES | default "1"}}'
+      _TIMEOUT: '{{.TIMEOUT | default "1m"}}'
+      _CPU: '{{.CPU | default "1"}}'
+      _MEMORY: '{{.MEMORY | default "512Mi"}}'
+      _GENERATION: '{{.GENERATION | default "1"}}'
+      _INGRESS: '{{.INGRESS | default "all"}}'
+      _PLATFORM: '{{.PLATFORM | default "managed"}}'
+      _CPU_BOOST: '{{.CPU_BOOST | default "no"}}'
+      _CPU_THROTTLE: '{{.CPU_THROTTLE | default "yes"}}'
+      _SSN_AFFINITY: '{{.SSN_AFFINITY | default "no"}}'
+      _USE_HTTP2: '{{.USE_HTTP2 | default "no"}}'
+      _HTTP_PORT: '{{.HTTP_PORT | default "8080"}}'
     dir: '{{.USER_WORKING_DIR}}'
     cmds:
       - >-
@@ -30,4 +41,18 @@ tasks:
         --min-instances={{._MIN_INSTANCES}}
         --max-instances={{._MAX_INSTANCES}}
         --region={{.RUN_REGION}}
+        --timeout={{._TIMEOUT}}
+        --cpu={{._CPU}}
+        --memory={{._MEMORY}}
+        --execution-environment=gen{{._GENERATION}}
+        --ingress={{._INGRESS}}
+        --platform={{._PLATFORM}}
+        --port={{._HTTP_PORT}}
+        --{{if eq CPU_BOOST "no"}}no-{{end}}cpu-boost
+        --{{if eq CPU_THOTTLE "no"}}no-{{end}}cpu-throttling
+        --{{if eq SSN_AFFINITY "no"}}no-{{end}}session-affinity
+        --{{if eq USE_HTTP2 "no"}}no-{{end}}use-http2
+        {{if SERVICE_ACCOUNT}}--service-account={{.SERVICE_ACCOUNT}}{{end}}
+        {{if VPC_CONNECTOR}}--vpc-connector={{.VPC_CONNECTOR}}{{end}}
+        {{if VPC_EGRESS}}--vpc-egress={{.VPC_EGRESS}}{{end}}
         --project={{.GCP_PROJECT}}

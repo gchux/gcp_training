@@ -1,0 +1,22 @@
+version: '3'
+
+vars:
+  G_AUTH_CMD: 'gcloud auth'
+
+tasks:
+
+  default:
+    cmds:
+      - echo '{{.G_AUTH_CMD}} ...'
+
+  configure_docker:
+    requires:
+      vars: [GCP_PROJECT, REPO_HOST]
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds:
+      - >-
+        {{.G_AUTH_CMD}}
+        configure-docker
+        {{.REPO_HOST}}
+        --quiet
+        --project={{.GCP_PROJECT}}
