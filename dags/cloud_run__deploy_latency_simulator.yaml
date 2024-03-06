@@ -3,22 +3,36 @@ tags: cloud_run,step_2
 description: https://github.com/gchux/jmeter-test-runner
 env:
   - _NAMESPACE: cloud_run
-  - _TARGET: deploy_jmeter
+  - _TARGET: deploy_latency_simulator
   - _DAG_NAME: ${_NAMESPACE}__${_TARGET}
   - _DAG_WORK_DIR: ${_WORK_DIR}/${_DAG_NAME}
   - _TASK_FILE: ${_TASKS_DIR}/${_NAMESPACE}/${_TARGET}.yaml
   - _TASK_CMD: task -t ${_TASK_FILE} -v
   - _DAG_CMD: ${_BIN_DIR}/${_DAG_NAME}
   - GCP_PROJECT: ${GOOGLE_CLOUD_PROJECT}
-  - GIT_REPO_URL: https://github.com/gchux/jmeter-test-runner.git
-  - GIT_ROOT_DIR: ${_DAG_WORK_DIR}/jmeter-test-runner
+  - GIT_REPO_URL: https://github.com/gchux/latency-simulator.git
+  - GIT_ROOT_DIR: ${_DAG_WORK_DIR}/latency-simulator
   - GIT_REPO_DIR: ${GIT_ROOT_DIR}
 params: >-
   GCP_PROJECT=<gcp_project>
   GCP_SERVICES=cloudbuild,artifactregistry,run
   RUN_REGION=us-west2
+  RUN_PORT=8080
+  RUN_TIMEOUT=60
+  RUN_CONCURRENCY=80
+  RUN_MIN_INSTANCES=0
+  RUN_MAX_INSTANCES=3
   REPO_LOCATION=us-west2
   REPO_NAME=training
+  LATENCY_PROFILE=default
+  STARTUP_INITIAL_DELAY_SECS=5
+  STARTUP_TIMEOUT_SECS=5
+  STARTUP_PERIOD_SECS=10
+  STARTUP_FAILURE_THRESHOLD=10
+  LIVENESS_INITIAL_DELAY_SECS=5
+  LIVENESS_TIMEOUT_SECS=5
+  LIVENESS_PERIOD_SECS=10
+  LIVENESS_FAILURE_THRESHOLD=10
 steps:
   - name: prepare_work_dir
     command: bash
@@ -67,7 +81,26 @@ steps:
       - build_container_image
   - name: deploy_run_service
     dir: ${GIT_REPO_DIR}
-    command: run ${_DAG_NAME} deploy_run_service "GCP_PROJECT=${GCP_PROJECT} RUN_REGION=${RUN_REGION} AR_REPO=${REPO_NAME} AR_LOCATION=${REPO_LOCATION}"
+    command: >-
+      run ${_DAG_NAME} deploy_run_service
+      "GCP_PROJECT=${GCP_PROJECT}
+      RUN_REGION=${RUN_REGION}
+      RUN_PORT=${RUN_PORT}
+      RUN_TIMEOUT=${RUN_TIMEOUT}
+      RUN_CONCURRENCY=${RUN_CONCURRENCY}
+      RUN_MIN_INSTANCES=${RUN_MIN_INSTANCES}
+      RUN_MAX_INSTANCES=${RUN_MAX_INSTANCES}
+      AR_REPO=${REPO_NAME}
+      AR_LOCATION=${REPO_LOCATION}
+      LATENCY_PROFILE=${LATENCY_PROFILE}
+      STARTUP_INITIAL_DELAY_SECS=${STARTUP_INITIAL_DELAY_SECS}
+      STARTUP_TIMEOUT_SECS=${STARTUP_TIMEOUT_SECS}
+      STARTUP_PERIOD_SECS=${STARTUP_PERIOD_SECS}
+      STARTUP_FAILURE_THRESHOLD=${STARTUP_FAILURE_THRESHOLD}
+      LIVENESS_INITIAL_DELAY_SECS=${LIVENESS_INITIAL_DELAY_SECS}
+      LIVENESS_TIMEOUT_SECS=${LIVENESS_TIMEOUT_SECS}
+      LIVENESS_PERIOD_SECS=${LIVENESS_PERIOD_SECS}
+      LIVENESS_FAILURE_THRESHOLD=${LIVENESS_FAILURE_THRESHOLD}"
     depends:
       - push_container_image
   - name: describe_run_service

@@ -31,7 +31,9 @@ tasks:
       _CPU_THROTTLE: '{{.CPU_THROTTLE | default "yes"}}'
       _SSN_AFFINITY: '{{.SSN_AFFINITY | default "no"}}'
       _USE_HTTP2: '{{.USE_HTTP2 | default "no"}}'
+      _AUTHENTICATE: '{{.AUTHENTICATE | default "yes"}}' 
       _HTTP_PORT: '{{.HTTP_PORT | default "8080"}}'
+      _VPC_EGRESS: '{{.VPC_EGRESS | default "private-ranges-only"}}'
     dir: '{{.USER_WORKING_DIR}}'
     cmds:
       - >-
@@ -48,11 +50,13 @@ tasks:
         --ingress={{._INGRESS}}
         --platform={{._PLATFORM}}
         --port={{._HTTP_PORT}}
-        --{{if eq CPU_BOOST "no"}}no-{{end}}cpu-boost
-        --{{if eq CPU_THOTTLE "no"}}no-{{end}}cpu-throttling
-        --{{if eq SSN_AFFINITY "no"}}no-{{end}}session-affinity
-        --{{if eq USE_HTTP2 "no"}}no-{{end}}use-http2
-        {{if SERVICE_ACCOUNT}}--service-account={{.SERVICE_ACCOUNT}}{{end}}
-        {{if VPC_CONNECTOR}}--vpc-connector={{.VPC_CONNECTOR}}{{end}}
-        {{if VPC_EGRESS}}--vpc-egress={{.VPC_EGRESS}}{{end}}
+        --{{if eq ._CPU_BOOST "no"}}no-{{end}}cpu-boost
+        --{{if eq ._CPU_THOTTLE "no"}}no-{{end}}cpu-throttling
+        --{{if eq ._SSN_AFFINITY "no"}}no-{{end}}session-affinity
+        --{{if eq ._USE_HTTP2 "no"}}no-{{end}}use-http2
+        --{{if eq ._AUTHENTICATE "yes"}}no-{{end}}allow-unauthenticated
+        {{if .ENV_VARS}}--set-env-vars={{.ENV_VARS}}{{end}}
+        {{if .SERVICE_ACCOUNT}}--service-account={{.SERVICE_ACCOUNT}}{{end}}
+        {{if .VPC_CONNECTOR}}--vpc-connector={{.VPC_CONNECTOR}}{{end}}
+        {{if .VPC_EGRESS}}--vpc-egress={{._VPC_EGRESS}}{{end}}
         --project={{.GCP_PROJECT}}

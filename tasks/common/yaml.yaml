@@ -1,0 +1,10 @@
+version: '3'
+
+tasks:
+
+  set_key:
+    requires:
+      vars: [FILE, KEY, VALUE]
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds: 
+      - cmd: 'yq ''{{.KEY}} = {{.VALUE}}'' {{.FILE}} | sponge {{.FILE}}'
