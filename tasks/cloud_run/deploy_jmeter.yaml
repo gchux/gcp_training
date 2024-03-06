@@ -62,7 +62,7 @@ tasks:
       vars: [GCP_PROJECT, AR_LOCATION]
     dir: '{{.USER_WORKING_DIR}}'
     vars:
-      _REPO_HOST: '{{.AR_LOCATTION}}-{{._AR_DOCKER_SUFFIX}}'
+      _REPO_HOST: '{{.AR_LOCATION}}-{{._AR_DOCKER_SUFFIX}}'
     cmds:
       - task: gcloud_auth:configure_docker
         vars:
@@ -75,18 +75,18 @@ tasks:
     cmds: 
       - task: docker:build_image_no_cache
         vars:
-          IMAGE_TAG: '{{.AR_LOCATTION}}-{{._AR_DOCKER_SUFFIX}}/{{.GCP_PROJECT}}/{{.AR_REPO}}/{{._JMETER_IMAGE_NAME}}'
+          IMAGE_TAG: '{{.AR_LOCATION}}-{{._AR_DOCKER_SUFFIX}}/{{.GCP_PROJECT}}/{{.AR_REPO}}/{{._JMETER_IMAGE_NAME}}'
 
   push_container_image:
     requires:
       vars: [GCP_PROJECT, AR_LOCATION, AR_REPO]
     dir: '{{.USER_WORKING_DIR}}'
     vars:
-      _REPO_HOST: '{{.AR_LOCATTION}}-{{._AR_DOCKER_SUFFIX}}'
+      _REPO_HOST: '{{.AR_LOCATION}}-{{._AR_DOCKER_SUFFIX}}'
     cmds: 
       - task: docker:push_image
         vars:
-          IMAGE_TAG: '{{.AR_LOCATTION}}-{{._AR_DOCKER_SUFFIX}}/{{.GCP_PROJECT}}/{{.AR_REPO}}/{{._JMETER_IMAGE_NAME}}'
+          IMAGE_TAG: '{{.AR_LOCATION}}-{{._AR_DOCKER_SUFFIX}}/{{.GCP_PROJECT}}/{{.AR_REPO}}/{{._JMETER_IMAGE_NAME}}'
 
   deploy_run_revision:
     requires:
