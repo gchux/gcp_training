@@ -1,9 +1,9 @@
 version: '3'
 
 includes:
-  gcloud_run:
-    taskfile: "gcloud_run_services.yaml"
-    aliases: [svc]
+  gcloud_run_services:
+    taskfile: "run_services.yaml"
+    aliases: [run_services]
 
 vars:
   GCLOUD_CMD: 'gcloud run'
@@ -16,11 +16,11 @@ tasks:
 
   deploy_container_image:
     requires:
-      vars: [TASK_DIR, GCP_PROJECT, RUN_SERVICE, RUN_REGION, IMAGE_TAG]
+      vars: [GCP_PROJECT, RUN_SERVICE, RUN_REGION, IMAGE_TAG]
     vars:
       _CONCURRENCY: '{{.REVISION__CONCURRENCY | default "1"}}'
       _MIN_INSTANCES: '{{.REVISION__MAX_INSTANCES | default "0"}}'
       _MAX_INSTANCES: '{{.REVISION__MAX_INSTANCES | default "1"}}'
-    dir: '{{.TASK_DIR}}'
+    dir: '{{.USER_WORKING_DIR}}'
     cmds:
       - cmd: '{{.GCLOUD_CMD}} deploy {{.RUN_SERVICE}} --image={{.IMAGE_TAG}} --concurrency={{._CONCURRENCY}} --min-instances={{._MIN_INSTANCES}} --max-instances={{._MAX_INSTANCES}} --region={{.RUN_REGION}} --project={{.GCP_PROJECT}}'

@@ -1,0 +1,70 @@
+version: '3'
+
+includes:
+  git:
+    taskfile: "../common/git.yaml"
+  docker:
+    taskfile: "../common/docker.yaml"
+  gcloud_config: 
+    taskfile: "../gcloud/config.yaml"
+  gcloud_services: 
+    taskfile: "../gcloud/services.yaml"
+  gcloud_builds: 
+    taskfile: "../gcloud/builds.yaml"
+  gcloud_artifacts_repositories: 
+    taskfile: "../gcloud/artifacts_repositories.yaml"
+
+tasks:
+
+  clone_git_repo:
+    requires:
+      vars: [GIT_REPO_URL, GIT_REPO_DIR]
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds: 
+      - task: git:clone
+
+  set_gcp_project:
+    requires:
+      vars: [GCP_PROJECT]
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds: 
+      - task: gcloud_config:set_project
+
+  enable_services:
+    requires:
+      vars: [GCP_PROJECT, GCP_SERVICES]
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds: 
+      - task: gcloud_services:enable
+        vars:
+          SERVICES: '{{.GCP_SERVICES}}'
+
+  create_docker_repository:
+    requires: 
+      vars: [GCP_PROJECT, REPO_NAME, REPO_LOCATION]
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds:
+      - task: gcloud_artifacts_repositories:create_if_not_exists
+        vars:
+          REPO_FORMAT: docker
+          REPO_DESCRIPTION: "Docker repository"
+
+  create_container_image:
+    requires:
+      vars: [GCP_PROJECT, REPO_NAME, REPO_LOCATION, IMAGE_NAME]
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds: 
+      - cmd: chmod +x quickstart.sh
+      - cmd: perl -i -pe 's/^CMD\s\[/CMD ["sh", /g' Dockerfile
+      - task: gcloud_builds:submit_using_tag
+        vars:
+          IMAGE_TAG: '{{.REPO_LOCATION}}-docker.pkg.dev/{{.GCP_PROJECT}}/{{.REPO_NAME}}/{{.IMAGE_NAME}}:latest'
+
+  run_container_image:
+    requires:
+      vars: [GCP_PROJECT, REPO_NAME, REPO_LOCATION, IMAGE_NAME]
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds: 
+      - task: docker:run_no_cache
+        vars:
+          IMAGE_TAG: '{{.REPO_LOCATION}}-docker.pkg.dev/{{.GCP_PROJECT}}/{{.REPO_NAME}}/{{.IMAGE_NAME}}:latest'

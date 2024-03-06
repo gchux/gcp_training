@@ -1,7 +1,7 @@
 version: '3'
 
 vars:
-  _GCLOUD_CMD: '{{.GCLOUD_CMD}} services'
+  _GCLOUD_CMD: 'gcloud run services'
 
 tasks:
 
@@ -11,9 +11,9 @@ tasks:
 
   describe:
     requires:
-      vars: [TASK_DIR, GCP_PROJECT, RUN_SERVICE, RUN_REGION]
+      vars: [GCP_PROJECT, RUN_SERVICE, RUN_REGION]
     vars:
       _FORMAT: '{{.FORMAT | default "json"}}'
-    dir: '{{.TASK_DIR}}'
+    dir: '{{.USER_WORKING_DIR}}'
     cmds:
       - cmd: '{{._GCLOUD_CMD}} describe {{.RUN_SERVICE}} --region={{.RUN_REGION}} --project={{.GCP_PROJECT}} --format={{._FORMAT}}'

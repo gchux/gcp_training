@@ -1,0 +1,21 @@
+version: '3'
+
+tasks:
+
+  remove_image:
+    requires:
+      vars: [IMAGE_TAG]
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds: 
+      - cmd: 'docker rmi --force {{.IMAGE_TAG}}'
+
+  run_no_cache:
+    requires:
+      vars: [IMAGE_TAG]
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds: 
+      - task: remove_image
+        ignore_error: true
+        vars:
+          IMAGE_TAG: '{{.IMAGE_TAG}}'
+      - cmd: 'docker run -t --rm {{.IMAGE_TAG}}'

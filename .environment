@@ -1,7 +1,9 @@
 REPO_DIR=$(pwd)
 
 BIN_DIR="${REPO_DIR}/bin"
+export _BIN_DIR=${BIN_DIR}
 TMP_DIR="${REPO_DIR}/tmp"
+export _TMP_DIR=${TMP_DIR}
 
 DIRENV_DL_URL='https://github.com/direnv/direnv/releases/download/v2.34.0/direnv.linux-amd64'
 DIRENV_BIN="${REPO_DIR}/bin/direnv"
