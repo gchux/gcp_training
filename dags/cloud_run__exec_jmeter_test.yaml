@@ -1,0 +1,82 @@
+group: cloud_run
+tags: cloud_run,step_2
+description: https://github.com/gchux/jmeter-test-runner
+env:
+  - _NAMESPACE: cloud_run
+  - _TARGET: exec_jmeter_test
+  - _DAG_NAME: ${_NAMESPACE}__${_TARGET}
+  - _DAG_WORK_DIR: ${_WORK_DIR}/${_DAG_NAME}
+  - GCP_PROJECT: ${GOOGLE_CLOUD_PROJECT}
+params: >-
+  GCP_PROJECT=<gcp_project>
+  RUN_JMETER_URL=<jmeter_test_executor_url>
+  TEST_HOST=<latency_simulator_fqdn>
+  TEST_PATH=/
+  TEST_CONCURRENCY=1
+  TEST_DURATION=1
+  TEST_RAMPUP_TIME=1
+  TEST_RAMPUP_STEPS=1
+  TEST_OUTPUT=response
+steps:
+  - name: create_base_url
+    command: echo "${RUN_JMETER_URL}/jmeter/test/run"
+    output: TEST_URL
+  - name: add_host_param
+    command: echo "${TEST_URL}?host=${TEST_HOST}"
+    depends: 
+      - create_base_url
+    output: TEST_URL
+  - name: add_path_param
+    command: echo "${TEST_URL}&path=${TEST_PATH}"
+    depends: 
+      - add_host_param
+    output: TEST_URL
+  - name: add_concurrency_param
+    command: echo "${TEST_URL}&concurrency=${TEST_CONCURRENCY}"
+    depends: 
+      - add_path_param
+    output: TEST_URL
+  - name: add_duration_param
+    command: echo "${TEST_URL}&duration=${TEST_DURATION}"
+    depends: 
+      - add_concurrency_param
+    output: TEST_URL
+  - name: add_rampup_time_param
+    command: echo "${TEST_URL}&rampup_time=${TEST_RAMPUP_TIME}"
+    depends: 
+      - add_duration_param
+    output: TEST_URL
+  - name: add_rampup_steps_param
+    command: echo "${TEST_URL}&rampup_steps=${TEST_RAMPUP_STEPS}"
+    depends: 
+      - add_rampup_time_param
+    output: TEST_URL
+  - name: add_output_param
+    command: echo "${TEST_URL}&output=${TEST_OUTPUT}"
+    depends: 
+      - add_rampup_steps_param
+    output: TEST_URL
+  - name: set_test_url
+    command: echo "${TEST_URL}"
+    depends: 
+      - add_output_param
+    output: TEST_URL
+  - name: generate_id_token
+    command: gcloud auth print-identity-token --audiences="${RUN_JMETER_URL}/" --project="${GCP_PROJECT}"
+    output: ID_TOKEN
+  - name: print_environment
+    command: printenv
+    depends: 
+      - set_test_url
+      - generate_id_token
+  - name: execute_jmeter_test
+    executor:
+      type: http
+      config:
+        silent: false
+        timeout: 3600
+        headers:
+          Authorization: "Bearer ${ID_TOKEN}"
+    command: GET "${TEST_URL}"
+    depends:
+      - print_environment
