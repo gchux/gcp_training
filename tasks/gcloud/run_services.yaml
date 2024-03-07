@@ -1,23 +1,296 @@
 version: '3'
 
+includes:
+  yaml:
+    taskfile: "../common/yaml.yaml"
+
 vars:
-  _GCLOUD_CMD: 'gcloud run services'
+  RUN_SVC_CMD: 'gcloud run services'
+  RUN_SVC_CONTAINER_YAML_PATH: '.spec.template.spec.containers[0]'
 
 tasks:
 
   default:
     cmds:
-      - echo '{{.GCLOUD_CMD}} ...'
+      - echo '{{.RUN_SVC_CMD}} ...'
 
   describe:
     requires:
       vars: [GCP_PROJECT, RUN_SERVICE, RUN_REGION]
     vars:
       _FORMAT: '{{.FORMAT | default "json"}}'
+      _OUTPUT: '{{.OUTPUT | default "/dev/stdout"}}'
     dir: '{{.USER_WORKING_DIR}}'
     cmds:
       - >-
-        {{._GCLOUD_CMD}} describe {{.RUN_SERVICE}}
+        {{.RUN_SVC_CMD}} describe
+        {{.RUN_SERVICE}}
         --region={{.RUN_REGION}}
         --project={{.GCP_PROJECT}}
         --format={{._FORMAT}}
+        > {{._OUTPUT}}
+
+  replace:
+    requires:
+      vars: [GCP_PROJECT, RUN_REGION, RUN_YAML]
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds:
+      - >-
+        {{.RUN_SVC_CMD}} replace
+        {{.RUN_YAML}}
+        --region={{.RUN_REGION}}
+        --project={{.GCP_PROJECT}}
+
+  set_health_checks:
+    requires:
+      vars: 
+        - GCP_PROJECT
+        - RUN_SERVICE 
+        - RUN_REGION
+        - STARTUP_PROBE
+        - STARTUP_PORT
+        - STARTUP_INITIAL_DELAY_SECS
+        - STARTUP_FAILURE_THRESHOLD
+        - STARTUP_TIMEOUT_SECS
+        - STARTUP_PERIOD_SECS
+        - LIVENESS_PROBE
+        - LIVENESS_PORT
+        - LIVENESS_INITIAL_DELAY_SECS
+        - LIVENESS_FAILURE_THRESHOLD
+        - LIVENESS_TIMEOUT_SECS
+        - LIVENESS_PERIOD_SECS
+    vars:
+      OUTPUT: '{{.USER_WORKING_DIR}}/{{.GCP_PROJECT}}_{{.RUN_SERVICE}}_{{.RUN_REGION}}_svc.yaml'
+      STARTUP_PROBE_PATH: '{{.RUN_SVC_CONTAINER_YAML_PATH}}.startupProbe'
+      STARTUP_X_PROBE: >-
+        {{if eq .STARTUP_PROBE "tcp"}}tcpSocket{{else if eq .STARTUP_PROBE "http"}}httpGet{{else if eq .STARTUP_PROBE "grpc"}}grpc{{else}}void{{end}}
+      STARTUP_X_PROBE_PATH: '{{.STARTUP_PROBE_PATH}}.{{.STARTUP_X_PROBE}}'
+      LIVENESS_PROBE_PATH: '{{.RUN_SVC_CONTAINER_YAML_PATH}}.livenessProbe'
+      LIVENESS_X_PROBE: >-
+        {{if eq .LIVENESS_PROBE "http"}}httpGet{{else if eq .LIVENESS_PROBE "grpc"}}grpc{{else}}void{{end}}
+      LIVENESS_X_PROBE_PATH: '{{.LIVENESS_PROBE_PATH}}.{{.LIVENESS_X_PROBE}}'
+    dir: '{{.USER_WORKING_DIR}}'
+    deps:
+      - task: describe
+        vars:
+          GCP_PROJECT: '{{.GCP_PROJECT}}'
+          RUN_SERVICE: '{{.RUN_SERVICE}}'
+          RUN_REGION: '{{.RUN_REGION}}'
+          FORMAT: export
+          OUTPUT: '{{.OUTPUT}}'
+    cmds:
+      - task: clear_{{.STARTUP_PROBE}}_probe
+        vars:
+          YAML: '{{.OUTPUT}}'
+          KEY: '{{.STARTUP_PROBE_PATH}}'
+      - task: clear_{{.LIVENESS_PROBE}}_probe
+        vars:
+          YAML: '{{.OUTPUT}}'
+          KEY: '{{.LIVENESS_PROBE_PATH}}'
+      - task: update_{{.STARTUP_PROBE}}_probe_common_props
+        vars:
+          YAML: '{{.OUTPUT}}'
+          KEY: '{{.STARTUP_PROBE_PATH}}'
+          INITIAL_DELAY_SECS: '{{.STARTUP_INITIAL_DELAY_SECS}}'
+          FAILURE_THRESHOLD: '{{.STARTUP_FAILURE_THRESHOLD}}'
+          TIMEOUT_SECS: '{{.STARTUP_TIMEOUT_SECS}}'
+          PERIOD_SECS: '{{.STARTUP_PERIOD_SECS}}'
+      - task: update_{{.LIVENESS_PROBE}}_probe_common_props
+        vars:
+          YAML: '{{.OUTPUT}}'
+          KEY: '{{.LIVENESS_PROBE_PATH}}'
+          INITIAL_DELAY_SECS: '{{.LIVENESS_INITIAL_DELAY_SECS}}'
+          FAILURE_THRESHOLD: '{{.LIVENESS_FAILURE_THRESHOLD}}'
+          TIMEOUT_SECS: '{{.LIVENESS_TIMEOUT_SECS}}'
+          PERIOD_SECS: '{{.LIVENESS_PERIOD_SECS}}'
+      - task: update_{{.STARTUP_PROBE}}_probe
+        vars:
+          YAML: '{{.OUTPUT}}'
+          KEY: '{{.STARTUP_X_PROBE_PATH}}'
+          PORT: '{{.STARTUP_PORT}}'
+          HTTP_PATH: '{{.STARTUP_HTTP_PATH}}'
+          GRPC_SERVICE: '{{.STARTUP_GRPC_SERVICE}}'
+      - task: update_{{.LIVENESS_PROBE}}_probe
+        vars:
+          YAML: '{{.OUTPUT}}'
+          KEY: '{{.LIVENESS_X_PROBE_PATH}}'
+          PORT: '{{.LIVENESS_PORT}}'
+          HTTP_PATH: '{{.LIVENESS_HTTP_PATH}}'
+          GRPC_SERVICE: '{{.LIVENESS_GRPC_SERVICE}}'
+      - task: replace
+        vars:
+          GCP_PROJECT: '{{.GCP_PROJECT}}'
+          RUN_SERVICE: '{{.RUN_SERVICE}}'
+          RUN_REGION: '{{.RUN_REGION}}'
+          RUN_YAML: '{{.OUTPUT}}'
+
+  set_startup_probe:
+    requires:
+      vars: 
+        - GCP_PROJECT
+        - RUN_SERVICE 
+        - RUN_REGION
+        - PROBE
+        - PORT
+        - INITIAL_DELAY_SECS
+        - FAILURE_THRESHOLD
+        - TIMEOUT_SECS
+        - PERIOD_SECS
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds:
+      - task: set_health_checks
+        vars:
+          GCP_PROJECT: '{{.GCP_PROJECT}}'
+          RUN_SERVICE: '{{.RUN_SERVICE}}'
+          RUN_REGION: '{{.RUN_REGION}}'
+          STARTUP_PROBE: '{{.PROBE}}'
+          STARTUP_PORT: '{{.PORT}}'
+          STARTUP_INITIAL_DELAY_SECS: '{{.INITIAL_DELAY_SECS}}'
+          STARTUP_FAILURE_THRESHOLD: '{{.FAILURE_THRESHOLD}}'
+          STARTUP_TIMEOUT_SECS: '{{.TIMEOUT_SECS}}'
+          STARTUP_PERIOD_SECS: '{{.PERIOD_SECS}}'
+          STARTUP_HTTP_PATH: '{{.HTTP_PATH}}'
+          STARTUP_GRPC_SERVICE: '{{.GRPC_SERVICE}}'
+          LIVENESS_PROBE: void
+          LIVENESS_PORT:
+          LIVENESS_INITIAL_DELAY_SECS:
+          LIVENESS_FAILURE_THRESHOLD:
+          LIVENESS_TIMEOUT_SECS:
+          LIVENESS_PERIOD_SECS:
+          LIVENESS_HTTP_PATH:
+          LIVENESS_GRPC_SERVICE:
+
+  set_liveness_probe:
+    requires:
+      vars: 
+        - GCP_PROJECT
+        - RUN_SERVICE 
+        - RUN_REGION
+        - PROBE
+        - PORT
+        - INITIAL_DELAY_SECS
+        - FAILURE_THRESHOLD
+        - TIMEOUT_SECS
+        - PERIOD_SECS
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds:
+      - task: set_health_checks
+        vars:
+          GCP_PROJECT: '{{.GCP_PROJECT}}'
+          RUN_SERVICE: '{{.RUN_SERVICE}}'
+          RUN_REGION: '{{.RUN_REGION}}'
+          LIVENESS_PROBE: '{{.PROBE}}'
+          LIVENESS_PORT: '{{.PORT}}'
+          LIVENESS_INITIAL_DELAY_SECS: '{{.INITIAL_DELAY_SECS}}'
+          LIVENESS_FAILURE_THRESHOLD: '{{.FAILURE_THRESHOLD}}'
+          LIVENESS_TIMEOUT_SECS: '{{.TIMEOUT_SECS}}'
+          LIVENESS_PERIOD_SECS: '{{.PERIOD_SECS}}'
+          LIVENESS_HTTP_PATH: '{{.HTTP_PATH}}'
+          LIVENESS_GRPC_SERVICE: '{{.GRPC_SERVICE}}'
+          STARTUP_PROBE: void
+          STARTUP_PORT:
+          STARTUP_INITIAL_DELAY_SECS:
+          STARTUP_FAILURE_THRESHOLD:
+          STARTUP_TIMEOUT_SECS:
+          STARTUP_PERIOD_SECS:
+          STARTUP_HTTP_PATH:
+          STARTUP_GRPC_SERVICE:
+
+  clear_probe:
+    internal: true
+    requires:
+      vars: [YAML, KEY]
+    dir: '{{.USER_WORKING_DIR}}'
+    aliases:
+      - clear_tcp_probe
+      - clear_http_probe
+      - clear_grpc_probe
+    cmds:
+      - task: yaml:set_key
+        vars:
+          KEY: '{{.KEY}}'
+          VALUE: '{}' 
+          FILE: '{{.YAML}}'
+
+  update_void_probe:
+    internal: true
+    silent: true
+    aliases: 
+      - clear_void_probe
+      - update_void_probe_common_props
+
+  update_http_probe:
+    internal: true
+    requires:
+      vars: [YAML, KEY, PORT, HTTP_PATH]
+    dir: '{{.USER_WORKING_DIR}}'
+    deps:
+      - task: update_probe_port
+        vars: { YAML: '{{.YAML}}', KEY: '{{.KEY}}', PORT: '{{.PORT}}' }
+    vars:
+      _HTTP_PATH: '{{.HTTP_PATH | default "/"}}'
+    cmds:
+      - task: yaml:set_key
+        vars:
+          KEY: '{{.KEY}}.path'
+          VALUE: '"{{._HTTP_PATH}}"' 
+          FILE: '{{.YAML}}'
+
+  update_grpc_probe:
+    internal: true
+    requires:
+      vars: [YAML, KEY, PORT, GRPC_SERVICE]
+    dir: '{{.USER_WORKING_DIR}}'
+    deps:
+      - task: update_probe_port
+        vars: { YAML: '{{.YAML}}', KEY: '{{.KEY}}', PORT: '{{.PORT}}' }
+    cmds:
+      - task: yaml:set_key
+        vars:
+          KEY: '{{.KEY}}.service'
+          VALUE: '"{{.GRPC_SERVICE}}"' 
+          FILE: '{{.YAML}}'
+
+  update_probe_port:
+    internal: true
+    aliases: [update_tcp_probe]
+    requires:
+      vars: [YAML, KEY, PORT]
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds:
+      - task: yaml:set_key
+        vars:
+          KEY: '{{.KEY}}.port'
+          VALUE: '{{.PORT}}' 
+          FILE: '{{.YAML}}'
+
+  update_probe_common_props:
+    internal: true
+    aliases:
+      - update_tcp_probe_common_props
+      - update_http_probe_common_props
+      - update_grpc_probe_common_props
+    requires:
+      vars: [YAML, KEY, INITIAL_DELAY_SECS, FAILURE_THRESHOLD, TIMEOUT_SECS, PERIOD_SECS]
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds:
+      - task: yaml:set_key
+        vars:
+          KEY: '{{.KEY}}.initialDelaySeconds'
+          VALUE: '{{.INITIAL_DELAY_SECS}}' 
+          FILE: '{{.YAML}}'
+      - task: yaml:set_key
+        vars:
+          KEY: '{{.KEY}}.failureThreshold'
+          VALUE: '{{.FAILURE_THRESHOLD}}' 
+          FILE: '{{.YAML}}'
+      - task: yaml:set_key
+        vars:
+          KEY: '{{.KEY}}.timeoutSeconds'
+          VALUE: '{{.TIMEOUT_SECS}}' 
+          FILE: '{{.YAML}}'
+      - task: yaml:set_key
+        vars:
+          KEY: '{{.KEY}}.periodSeconds'
+          VALUE: '{{.PERIOD_SECS}}' 
+          FILE: '{{.YAML}}'
