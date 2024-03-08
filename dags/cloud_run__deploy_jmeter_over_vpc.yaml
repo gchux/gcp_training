@@ -13,12 +13,8 @@ env:
   - _TASK_CMD: task -t ${_TASK_FILE} -v
   - _DAG_CMD: ${_BIN_DIR}/${_DAG_NAME}
   - GCP_PROJECT: ${GOOGLE_CLOUD_PROJECT}
-<<<<<<< HEAD
-  - DEPLOY_JMETER_DAG: ${_DAGS_DIR}/${_NAMESPACE}__deploy_jmeter.yaml
-=======
   - DEPLOY_JMETER__DAG: ${_DAGS_DIR}/${_NAMESPACE}__deploy_jmeter.yaml
   - CREATE_VPC_CONNECTOR__DAG: ${_DAGS_DIR}/serverless__create_vpc_connector.yaml
->>>>>>> chux/wip
 params: >-
   GCP_PROJECT=<gcp_project>
   GCP_SERVICES=cloudbuild,artifactregistry,run,compute,vpcaccess
@@ -48,58 +44,26 @@ steps:
   - name: deploy_jmeter
     dir: ${_DAG_WORK_DIR}
     command: >-
-<<<<<<< HEAD
-      dag ${DEPLOY_JMETER_DAG}
-      "GCP_PROJECT=${GCP_PROJECT}
-      GCP_SERVICES=${GCP_SERVICES}
-=======
       dag ${DEPLOY_JMETER__DAG}
       "GCP_PROJECT=${GCP_PROJECT}
       GCP_SERVICES=cloudbuild,artifactregistry,run
->>>>>>> chux/wip
       RUN_SERVICE=${RUN_SERVICE}
       RUN_REGION=${RUN_REGION}
       REPO_LOCATION=${REPO_LOCATION}
       REPO_NAME=${REPO_NAME}"
     depends:
       - prepare_work_dir
-<<<<<<< HEAD
-  - name: create_vpc_subnet
-    dir: ${_DAG_WORK_DIR}
-    command: >-
-      run ${_DAG_NAME} create_vpc_subnet
-      "GCP_PROJECT=${GCP_PROJECT}
-=======
   - name: create_vpc_connector
     dir: ${_DAG_WORK_DIR}
     command: >-
       dag ${CREATE_VPC_CONNECTOR__DAG}
       "GCP_PROJECT=${GCP_PROJECT}
       GCP_SERVICES=compute,vpcaccess
->>>>>>> chux/wip
       VPC_NETWORK=${VPC_NETWORK}
       SUBNET_NAME=${SUBNET_NAME}
       SUBNET_REGION=${RUN_REGION}
       SUBNET_RANGE=${IP_RANGE}
       PRIVATE_GOOGLE_ACCESS=${PRIVATE_GOOGLE_ACCESS}
-<<<<<<< HEAD
-      ENABLE_FLOW_LOGS=${ENABLE_FLOW_LOGS}"
-    depends:
-      - prepare_work_dir
-  - name: create_vpc_connector
-    command: >-
-      run ${_DAG_NAME} create_vpc_connector
-      "GCP_PROJECT=${GCP_PROJECT}
-      VPC_NETWORK=${VPC_NETWORK}
-      CONNECTOR_NAME=${CONNECTOR_NAME}
-      CONNECTOR_REGION=${RUN_REGION}
-      CONNECTOR_SUBNET=${SUBNET_NAME}
-      CONNECTOR_MIN_INSTANCES=${CONNECTOR_MIN_INSTANCES}
-      CONNECTOR_MAX_INSTANCES=${CONNECTOR_MAX_INSTANCES}
-      CONNECTOR_MACHINE_TYPE=${CONNECTOR_MACHINE}"
-    depends:
-      - create_vpc_subnet
-=======
       ENABLE_FLOW_LOGS=${ENABLE_FLOW_LOGS}
       CONNECTOR_NAME=${CONNECTOR_NAME}
       CONNECTOR_MIN_INSTANCES=${CONNECTOR_MIN_INSTANCES}
@@ -108,7 +72,6 @@ steps:
       VPC_EGRESS=${VPC_EGRESS}"
     depends:
       - prepare_work_dir
->>>>>>> chux/wip
   - name: update_run_service
     command: >-
       run ${_DAG_NAME} update_run_service
