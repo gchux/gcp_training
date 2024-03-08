@@ -1,4 +1,6 @@
-REPO_DIR=$(pwd)
+REPO_DIR=$(git rev-parse --show-toplevel)
+
+export _DAGS_ENV="${REPO_DIR}/.environment"
 
 BIN_DIR="${REPO_DIR}/bin"
 export _BIN_DIR=${BIN_DIR}
@@ -40,3 +42,5 @@ export DAGU_NAVBAR_TITLE="GCP"
 
 YQ_DL_URL='https://github.com/mikefarah/yq/releases/download/v4.42.1/yq_linux_amd64'
 YQ_BIN="${BIN_DIR}/yq"
+
+export PATH=${BIN_DIR}:${PATH}

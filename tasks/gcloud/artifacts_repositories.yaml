@@ -1,13 +1,13 @@
 version: '3'
 
 vars:
-  GCLOUD_CMD: 'gcloud artifacts repositories'
+  ARTIFACTS_REPOS_CMD: 'gcloud artifacts repositories'
 
 tasks:
 
   default:
     cmds:
-      - echo '{{.GCLOUD_CMD}} ...'
+      - echo '{{.ARTIFACTS_REPOS_CMD}} ...'
 
   list:
     requires:
@@ -15,7 +15,7 @@ tasks:
     dir: '{{.USER_WORKING_DIR}}'
     cmds:
       - >-
-        {{.GCLOUD_CMD}} list
+        {{.ARTIFACTS_REPOS_CMD}} list
         --project={{.GCP_PROJECT}}
         {{if .LOCATION}}--location={{.LOCATION}}{{end}} 
         {{if .FORMAT}}--format={{.FORMAT}}{{end}}
@@ -28,7 +28,7 @@ tasks:
     vars: 
       REPO_EXISTS: 
         sh: >-
-          gcloud artifacts repositories list 
+          {{.ARTIFACTS_REPOS_CMD}} list 
           --location={{.REPO_LOCATION}} 
           --project={{.GCP_PROJECT}} 
           --format='json(name)' 
@@ -37,7 +37,7 @@ tasks:
     cmds:
       - >-
         [ {{.REPO_EXISTS}} = 0 ] &&
-        {{.GCLOUD_CMD}} create {{.REPO_NAME}}
+        {{.ARTIFACTS_REPOS_CMD}} create {{.REPO_NAME}}
         --repository-format={{.REPO_FORMAT}}
         --location={{.REPO_LOCATION}}
         --description='{{.REPO_DESCRIPTION}}'
@@ -51,7 +51,7 @@ tasks:
     dir: '{{.USER_WORKING_DIR}}'
     cmds:
       - >-
-        {{.GCLOUD_CMD}} create {{.REPO_NAME}}
+        {{.ARTIFACTS_REPOS_CMD}} create {{.REPO_NAME}}
         --repository-format={{.REPO_FORMAT}}
         --location={{.REPO_LOCATION}}
         --description='{{.REPO_DESCRIPTION}}'

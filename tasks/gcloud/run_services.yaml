@@ -30,6 +30,26 @@ tasks:
         --format={{._FORMAT}}
         > {{._OUTPUT}}
 
+  set_vpc_connector:
+    requires:
+      vars:
+        - GCP_PROJECT
+        - RUN_SERVICE
+        - RUN_REGION
+        - VPC_CONNECTOR
+    vars:
+      _VPC_CONNECTOR: 'projects/{{.GCP_PROJECT}}/locations/{{.RUN_REGION}}/connectors/{{.VPC_CONNECTOR}}'
+      _VPC_EGRESS: '{{.VPC_EGRESS | default "private-ranges-only"}}'
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds:
+      - >-
+        {{.RUN_SVC_CMD}} update
+        {{.RUN_SERVICE}}
+        --vpc-connector={{._VPC_CONNECTOR}}
+        --vpc-egress={{._VPC_EGRESS}}
+        --region={{.RUN_REGION}}
+        --project={{.GCP_PROJECT}}
+
   replace:
     requires:
       vars: [GCP_PROJECT, RUN_REGION, RUN_YAML]

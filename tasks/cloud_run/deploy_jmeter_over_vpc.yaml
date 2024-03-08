@@ -1,0 +1,50 @@
+version: '3'
+
+includes:
+  gcloud_compute_net_subnets: 
+    taskfile: "../gcloud/compute_networks_subnets.yaml"
+  gcloud_compute_net_s8s: 
+    taskfile: "../gcloud/compute_networks_s8s.yaml"
+  gcloud_run: 
+    taskfile: "../gcloud/run.yaml"
+
+tasks:
+
+  create_vpc_subnet:
+    requires:
+      vars:
+        - GCP_PROJECT
+        - VPC_NETWORK
+        - SUBNET_NAME
+        - SUBNET_REGION
+        - SUBNET_RANGE
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds:
+      - task: gcloud_compute_net_subnets:create
+
+  create_vpc_connector:
+    requires:
+      vars:
+        - GCP_PROJECT
+        - VPC_NETWORK
+        - CONNECTOR_NAME
+        - CONNECTOR_REGION
+        - CONNECTOR_SUBNET
+        - CONNECTOR_MIN_INSTANCES
+        - CONNECTOR_MAX_INSTANCES
+        - CONNECTOR_MACHINE_TYPE
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds: 
+      - task: gcloud_compute_net_s8s:create_using_subnet
+
+  update_run_service:
+    requires:
+      vars:
+        - GCP_PROJECT 
+        - RUN_SERVICE
+        - RUN_REGION
+        - VPC_CONNECTOR
+    dir: '{{.USER_WORKING_DIR}}'
+    vars:
+    cmds:
+      - task: gcloud_run:run_services:set_vpc_connector

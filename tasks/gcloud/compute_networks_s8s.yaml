@@ -1,0 +1,65 @@
+version: '3'
+
+vars:
+  COMPUTE_NET_S8S_CMD: 'gcloud compute networks vpc-access connectors'
+
+tasks:
+
+  default:
+    cmds:
+      - cmd: echo '{{.COMPUTE_NET_S8S_CMD}} ...'
+
+  create_using_subnet:
+    requires:
+      vars:
+        - GCP_PROJECT
+        - VPC_NETWORK
+        - CONNECTOR_NAME
+        - CONNECTOR_REGION
+        - CONNECTOR_SUBNET
+        - CONNECTOR_MIN_INSTANCES
+        - CONNECTOR_MAX_INSTANCES
+        - CONNECTOR_MACHINE_TYPE
+    dir: '{{.USER_WORKING_DIR}}'
+    vars:
+      _NAME: '{{.CONNECTOR_NAME}}'
+      _REGION: '{{.CONNECTOR_REGION}}'
+      CONNECTOR_EXISTS:
+        sh: >-
+          {{.COMPUTE_NET_S8S_CMD}} list
+          --region={{._REGION}}
+          --filter='name~/{{._NAME}}$'
+          --format='json(name)'
+          --project={{.GCP_PROJECT}}
+          | jq '. | length'
+    cmds:
+      - >-
+        [ {{.CONNECTOR_EXISTS}} = 0 ] &&
+        {{.COMPUTE_NET_S8S_CMD}}
+        create {{.CONNECTOR_NAME}}
+        --region={{.CONNECTOR_REGION}}
+        --subnet={{.CONNECTOR_SUBNET}}
+        --min-instances={{.CONNECTOR_MIN_INSTANCES}}
+        --max-instances={{.CONNECTOR_MAX_INSTANCES}}
+        --machine-type={{.CONNECTOR_MACHINE_TYPE}}
+        --project={{.GCP_PROJECT}}
+        || echo 'already exists: projects/{{.GCP_PROJECT}}/locations/{{.CONNECTOR_REGION}}/connectors/{{.CONNECTOR_NAME}}'
+
+  describe:
+    requires:
+      vars:
+        - GCP_PROJECT
+        - CONNECTOR_NAME
+        - CONNECTOR_REGION
+    dir: '{{.USER_WORKING_DIR}}'
+    vars:
+      _NAME: '{{.CONNECTOR_NAME}}'
+      _REGION: '{{.CONNECTOR_REGION}}'
+      _FORMAT: '{{.FORMAT | default "json"}}'
+    cmds:
+      - >-
+        {{.COMPUTE_NET_S8S_CMD}}
+        describe {{.CONNECTOR_NAME}}
+        --region={{.CONNECTOR_REGION}}
+        --project={{.GCP_PROJECT}}
+        --format={{._FORMAT}}

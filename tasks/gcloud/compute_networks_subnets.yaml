@@ -1,0 +1,62 @@
+version: '3'
+
+vars:
+  COMPUTE_NET_SUBNETS_CMD: 'gcloud compute networks subnets'
+
+tasks:
+
+  default:
+    cmds:
+      - cmd: echo '{{.COMPUTE_NET_SUBNETS_CMD}} ...'
+
+  create:
+    requires:
+      vars:
+        - GCP_PROJECT
+        - VPC_NETWORK
+        - SUBNET_NAME
+        - SUBNET_REGION
+        - SUBNET_RANGE
+    dir: '{{.USER_WORKING_DIR}}'
+    vars:
+      _NAME: '{{.SUBNET_NAME}}'
+      _REGION: '{{.SUBNET_REGION}}'
+      _PRIVATE_GOOGLE_ACCESS: '{{.PRIVATE_GOOGLE_ACCESS | default "no"}}'
+      _ENABLE_FLOW_LOGS: '{{.ENABLE_FLOW_LOGS | default "no"}}'
+      SUBNET_EXISTS:
+        sh: >-
+          {{.COMPUTE_NET_SUBNETS_CMD}} list
+          --project={{.GCP_PROJECT}} --network={{.VPC_NETWORK}}
+          --filter='region={{._REGION}} AND name={{._NAME}}'
+          --format='json(name)' | jq '. | length'
+    cmds:
+      - >-
+        [ {{.SUBNET_EXISTS}} = 0 ] &&
+        {{.COMPUTE_NET_SUBNETS_CMD}}
+        create {{.SUBNET_NAME}}
+        --network={{.VPC_NETWORK}}
+        --range={{.SUBNET_RANGE}}
+        --region={{.SUBNET_REGION}}
+        --project={{.GCP_PROJECT}}
+        {{if eq ._PRIVATE_GOOGLE_ACCESS "yes"}}--enable-private-ip-google-access{{end}}
+        {{if eq ._ENABLE_FLOW_LOGS "yes"}}--enable-flow-logs{{end}}
+        || echo  'already exists: projects/{{.GCP_PROJECT}}/regions/{{.SUBNET_REGION}}/subnetworks/{{.SUBNET_NAME}}'
+
+  describe:
+    requires:
+      vars:
+        - GCP_PROJECT
+        - SUBNET_NAME
+        - SUBNET_REGION
+    dir: '{{.USER_WORKING_DIR}}'
+    vars:
+      _NAME: '{{.SUBNET_NAME}}'
+      _REGION: '{{.SUBNET_REGION}}'
+      _FORMAT: '{{.FORMAT | default "json"}}'
+    cmds:
+      - >-
+        {{.COMPUTE_NET_SUBNETS_CMD}}
+        describe {{.SUBNET_NAME}}
+        --region={{.SUBNET_REGION}}
+        --project={{.GCP_PROJECT}}
+        --format={{._FORMAT}}
