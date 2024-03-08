@@ -1,0 +1,65 @@
+version: '3'
+
+includes:
+  https:
+    taskfile: "../common/https.yaml"
+  gcloud_identity_providers:
+    taskfile: "identity_providers.yaml"
+    aliases: [providers]
+
+vars:
+  IDENTITY_GAPI: 'identitytoolkit.googleapis.com/admin/v2'
+
+tasks:
+
+  default:
+    cmds:
+      - cmd: echo '{{IDENTITY_GAPI}} ...'
+
+  get_config:
+    requires:
+      vars:
+        - GCP_PROJECT
+        - OUTPUT
+    dir: '{{.USER_WORKING_DIR}}'
+    vars:
+      PARENT: 'projects/{{.GCP_PROJECT}}'
+      FIELD: '{{.FIELD | default "*"}}'
+      JQ_KEY: '{{if eq .FIELD "*"}}.{{else}}.{{.FIELD}}{{end}}'
+    cmds:
+      - task: https:request
+        vars:
+          BEARER: 'google:access_token'
+          ENDPOINT: 'GET {{.IDENTITY_GAPI}}/{{.PARENT}}/config'
+          QUERY: >-
+            fields=={{.FIELD}}
+          HEADERS: >-
+            content-type:'application/json'
+            accept:'application/json'
+            x-goog-user-project:{{.GCP_PROJECT}}
+          OUTPUT: '{{.OUTPUT}}'
+      - jq -rcM '{{.JQ_KEY}}' < {{.OUTPUT}} | sponge {{.OUTPUT}}
+      - cat -n {{.OUTPUT}}
+
+  update_config:
+    requires:
+      vars:
+        - GCP_PROJECT
+        - FIELD_KEY
+        - FIELD_VALUE
+    dir: '{{.USER_WORKING_DIR}}'
+    vars:
+      PARENT: 'projects/{{.GCP_PROJECT}}'
+    cmds:
+      - task: https:request
+        vars:
+          BEARER: 'google:access_token'
+          ENDPOINT: 'PATCH {{.IDENTITY_GAPI}}/{{.PARENT}}/config'
+          QUERY: >-
+            updateMask=={{.FIELD_KEY}}
+            fields=={{.FIELD_KEY}}
+          HEADERS: >-
+            content-type:'application/json'
+            accept:'application/json'
+            x-goog-user-project:{{.GCP_PROJECT}}
+          BODY: '{{.FIELD_VALUE}}'

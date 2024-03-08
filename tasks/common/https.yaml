@@ -1,0 +1,37 @@
+version: '3'
+
+tasks:
+
+  exec:
+    internal: true
+    requires:
+      vars: [METHOD, ENDPOINT, QUERY, HEADERS]
+    vars:
+    cmds:
+      - >-
+        xh --https --ignore-stdin
+        {{if .BEARER}}-A bearer -a
+        {{if eq .BEARER "google:access_token"}}`gcloud auth print-access-token`
+        {{else if eq .BEARER "google:identity_token"}}`gcloud auth print-identity-token`
+        {{else}}''{{.BEARER}}''{{end}}{{end}}
+        --pretty=format {{if .OUTPUT}}--body{{else}}--verbose{{end}}
+        {{.METHOD}} {{.ENDPOINT}} {{.QUERY}} {{.HEADERS}}
+        {{if .BODY}}{{if hasPrefix "@" .BODY}}{{.BODY}}{{end}}{{else}}--raw='{{.BODY}}'{{end}}
+        | tee {{.OUTPUT | default "/dev/stdout"}}
+
+  request:
+    requires:
+      vars: [ENDPOINT, QUERY, HEADERS]
+    vars:
+      METHOD: '{{splitList " " .ENDPOINT | first}}'
+      ENDPOINT: '{{.ENDPOINT | replace .METHOD ""}}'
+    cmds:
+      - task: exec
+        vars:
+          METHOD: '{{.METHOD | trim | upper}}'
+          ENDPOINT: '{{.ENDPOINT | trim}}'
+          QUERY: '{{.QUERY}}'
+          HEADERS: '{{.HEADERS}}'
+          BODY: '{{.BODY}}'
+          BEARER: '{{.BEARER | default ""}}'
+          OUTPUT: '{{.OUTPUT}}'

@@ -1,0 +1,54 @@
+version: '3'
+
+includes:
+  git:
+    taskfile: "../common/git.yaml"
+  gcloud_config:
+    taskfile: "../gcloud/config.yaml"
+  gcloud_services:
+    taskfile: "../gcloud/services.yaml"
+
+tasks:
+
+  clone_git_repo:
+    requires:
+      vars: [GIT_REPO_URL, GIT_REPO_DIR]
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds: 
+      - task: git:clone
+
+  set_gcp_project:
+    requires:
+      vars: [GCP_PROJECT]
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds: 
+      - task: gcloud_config:set_project
+
+  enable_services:
+    requires:
+      vars: [GCP_PROJECT, GCP_SERVICES]
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds: 
+      - task: gcloud_services:enable
+        vars:
+          SERVICES: '{{.GCP_SERVICES}}'
+
+  deploy_oidc_server:
+    requires:
+      vars: [GCP_PROJECT, GAE_SERVICE, OIDC_DOMAIN]
+    dir: '{{.USER_WORKING_DIR}}'
+    vars:
+      _DOTENV: '{{.USER_WORKING_DIR}}/.task_env'
+      _DOCKERFILE: 'DOCKER_FILE={{.USER_WORKING_DIR}}/Dockerfile'
+    env:
+      GCP_PROJECT_ID: '{{.GCP_PROJECT}}'
+      FIREBASE_PROJECT_ID: '{{.GAE_SERVICE}}'
+      GAE_SERVICE: '{{.GAE_SERVICE}}'
+      OIDC_DOMAIN: '{{.OIDC_DOMAIN}}'
+      OIDC_CLIENT_ID: '{{.GAE_SERVICE}}'
+      OIDC_CLIENT_SECRET:
+        sh: 'tr -dc A-Za-z0-9 </dev/urandom | head -c 128 | md5sum | tr -d '' \-\n'''
+    cmds:
+      - |-
+          source <(printenv | perl -pe 's/(^.+?=)"(.+?)"$/\1\2/' | grep -vE '^_.*')
+          exec env task -v -d {{.USER_WORKING_DIR}} docker-deploy {{._DOCKERFILE}}

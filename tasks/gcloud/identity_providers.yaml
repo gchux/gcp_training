@@ -1,0 +1,27 @@
+version: '3'
+
+includes:
+  https:
+    taskfile: "../common/https.yaml"
+
+tasks:
+
+  create_oidc:
+    requires:
+      vars:
+        - GCP_PROJECT
+        - PROVIDER_NAME
+        - PROVIDER_JSON
+    dir: '{{.USER_WORKING_DIR}}'
+    vars: { PARENT: 'projects/{{.GCP_PROJECT}}' }
+    cmds:
+      - task: https:request
+        vars:
+          BEARER: 'google:access_token'
+          ENDPOINT: 'POST {{.IDENTITY_GAPI}}/{{.PARENT}}/oauthIdpConfigs'
+          QUERY: >-
+            oauthIdpConfigId==oidc.{{.PROVIDER_NAME}}
+          HEADERS: >-
+            content-type:'application/json'
+            x-goog-user-project:{{.GCP_PROJECT}}
+          BODY: '{{.PROVIDER_JSON | default ""}}'

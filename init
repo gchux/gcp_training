@@ -22,6 +22,11 @@ curl -L -o ${TASK_DL_TGZ} "${TASK_DL_URL}"
 tar -xf ${TASK_DL_TGZ} --directory ${TASK_TMP_DIR}
 ln -s ${TASK_TMP_BIN} ${TASK_BIN}
 
+mkdir ${XH_TMP_DIR}
+curl -L -o ${XH_DL_TGZ} "${XH_DL_URL}"
+tar -xf ${XH_DL_TGZ} --directory=${XH_TMP_DIR} --strip-components=1
+ln -s ${XH_TMP_BIN} ${XH_BIN}
+
 mkdir ${DAGU_TMP_DIR}
 mkdir -p ${DAGU_DL_DIR}
 curl -L -o ${DAGU_DL_TGZ} "${DAGU_DL_URL}"

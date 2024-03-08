@@ -14,6 +14,7 @@ tasks:
       vars: [GCP_PROJECT, GAE_SERVICE]
     vars:
       _FORMAT: '{{.FORMAT | default "json"}}'
+      _OUTPUT: '{{.OUTPUT | default "/dev/stdout"}}'
     dir: '{{.USER_WORKING_DIR}}'
     cmds:
       - >-
@@ -21,3 +22,4 @@ tasks:
         {{.GAE_SERVICE}}
         --format={{._FORMAT}}
         --project={{.GCP_PROJECT}}
+        > {{._OUTPUT}}

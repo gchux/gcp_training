@@ -14,6 +14,7 @@ tasks:
       vars: [GCP_PROJECT, GAE_SERVICE, GAE_VERSION]
     vars:
       _FORMAT: '{{.FORMAT | default "json"}}'
+      _OUTPUT: '{{.OUTPUT | default "/dev/stdout"}}'
     dir: '{{.USER_WORKING_DIR}}'
     cmds:
       - >-
@@ -22,3 +23,21 @@ tasks:
         --service={{.GAE_SERVICE}}
         --format={{._FORMAT}}
         --project={{.GCP_PROJECT}}
+        > {{._OUTPUT}}
+
+  list:
+    requires:
+      vars: [GCP_PROJECT, GAE_SERVICE]
+    vars:
+      _FORMAT: '{{.FORMAT | default "json"}}'
+      _OUTPUT: '{{.OUTPUT | default "/dev/stdout"}}'
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds:
+      - >-
+        {{.APP_VERSIONS_CMD}} list
+        {{.GAE_VERSION}}
+        --service={{.GAE_SERVICE}}
+        --format={{._FORMAT}}
+        --project={{.GCP_PROJECT}}
+        {{if .FILTER}}--filter={{.FILTER}}{{end}}
+        > {{._OUTPUT}}
