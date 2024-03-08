@@ -253,7 +253,7 @@ tasks:
       - task: yaml:set_key
         vars:
           KEY: '{{.KEY}}.path'
-          VALUE: '"{{._HTTP_PATH}}"' 
+          VALUE: '"{{._HTTP_PATH}}"'
           FILE: '{{.YAML}}'
 
   update_grpc_probe:
