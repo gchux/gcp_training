@@ -134,7 +134,7 @@ tasks:
           IMAGE_TAG: '{{.AR_LOCATION}}-{{._AR_DOCKER_SUFFIX}}/{{.GCP_PROJECT}}/{{.AR_REPO}}/{{._ARTIFACT_NAME}}:{{._IMAGE_REVISION}}'
       - task: gcloud_run:run_services:set_health_checks
         vars:
-          RUN_SERVICE: '{{._RUN_SERVICE}}'
+          RUN_SERVICE: '{{.LATENCY_PROFILE}}-{{._RUN_SERVICE}}'
           STARTUP_PROBE: "tcp"
           STARTUP_PORT: '{{._RUN_PORT}}'
           STARTUP_INITIAL_DELAY_SECS: '{{.STARTUP_INITIAL_DELAY_SECS}}'
@@ -151,11 +151,13 @@ tasks:
 
   describe_run_service:
     requires:
-      vars: [GCP_PROJECT, RUN_REGION]
+      vars: [GCP_PROJECT, RUN_REGION, LATENCY_PROFILE]
     dir: '{{.USER_WORKING_DIR}}'
+    vars:
+      _RUN_SERVICE: '{{._ARTIFACT_NAME}}'
     cmds:
       - task: gcloud_run:run_services:describe
         vars:
-          RUN_SERVICE: '{{._ARTIFACT_NAME}}'
+          RUN_SERVICE: '{{.LATENCY_PROFILE}}-{{._RUN_SERVICE}}'
           FORMAT: flattened
 

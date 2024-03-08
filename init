@@ -27,6 +27,7 @@ mkdir -p ${DAGU_DL_DIR}
 curl -L -o ${DAGU_DL_TGZ} "${DAGU_DL_URL}"
 tar -xf ${DAGU_DL_TGZ} --directory ${DAGU_DL_DIR}
 ln -s ${DAGU_DL_BIN} ${DAGU_BIN}
+ln -s ${DAGU_DL_BIN} ${BIN_DIR}/dag
 mkdir -p ${DAGU_LOG_DIR}
 mkdir -p ${DAGU_DATA_DIR}
 mkdir -p ${DAGU_WORK_DIR}
