@@ -1,6 +1,8 @@
 version: '3'
 
 includes:
+  yaml:
+    taskfile: "../common/yaml.yaml"
   gcloud_app_services:
     taskfile: "appengine_services.yaml"
     aliases: [app_services]
@@ -23,14 +25,21 @@ tasks:
     vars:
       _SOURCE: '{{.USER_WORKING_DIR}}'
       _APP_YAML_FNAME: '{{.APP_YAML_FNAME | default "app.yaml"}}'
-      _APP_YAML_PATH: '{{.GAE_YAML | default | list ._SOURCE ._APP_YAML_FNAME | join "/"}}'
+      _APP_YAML_PATH: '{{list ._SOURCE ._APP_YAML_FNAME | join "/"}}'
+      _GAE_SERVICE: '{{.GAE_SERVICE | default "default"}}'
     dir: '{{.USER_WORKING_DIR}}'
     cmds:
+      - task: yaml:set_key
+        vars:
+          KEY: '.service'
+          VALUE: '"{{.GAE_SERVICE}}"'
+          FILE: '{{._APP_YAML_PATH}}'
       - >-
         {{.APP_CMD}} deploy {{._SOURCE}}
         {{if .IMAGE_URL}}--image-url={{.IMAGE_URL}}{{end}}
         --appyaml={{._APP_YAML_PATH}}
         --project={{.GCP_PROJECT}}
+        {{if .GAE_VERSION}}--version={{.GAE_VERSION}}{{end}}
 
   describe:
     requires:

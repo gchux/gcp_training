@@ -1,13 +1,13 @@
 version: '3'
 
 vars:
-  GCLOUD_CMD: 'gcloud builds'
+  BUILDS_CMD: 'gcloud builds'
 
 tasks:
 
   default:
     cmds:
-      - cmd: echo '{{.GCLOUD_CMD}} ...'
+      - cmd: echo '{{.BUILDS_CMD}} ...'
 
   submit_using_pack:
     requires:
@@ -17,7 +17,8 @@ tasks:
       BUILD_DIR: '{{.USER_WORKING_DIR}}'
     cmds:
       - >-
-        {{.GCLOUD_CMD}} submit {{.BUILD_DIR}}
+        {{.BUILDS_CMD}} submit
+        {{.BUILD_DIR}}
         --pack='image={{.IMAGE_TAG}}'
         --dir={{.BUILD_DIR}}
         --project={{.GCP_PROJECT}}
@@ -30,7 +31,8 @@ tasks:
       BUILD_DIR: '{{.USER_WORKING_DIR}}'
     cmds:
       - >-
-        {{.GCLOUD_CMD}} submit {{.BUILD_DIR}}
+        {{.BUILDS_CMD}} submit 
+        {{.BUILD_DIR}}
         --tag={{.IMAGE_TAG}}
         --dir={{.BUILD_DIR}}
         --project={{.GCP_PROJECT}}

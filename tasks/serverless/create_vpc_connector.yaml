@@ -1,0 +1,42 @@
+version: '3'
+
+includes:
+  gcloud_compute_net_subnets:
+    taskfile: "../gcloud/compute_networks_subnets.yaml"
+  gcloud_compute_net_s8s: 
+    taskfile: "../gcloud/compute_networks_s8s.yaml"
+
+tasks:
+
+  create_vpc_subnet:
+    requires:
+      vars:
+        - GCP_PROJECT
+        - VPC_NETWORK
+        - SUBNET_NAME
+        - SUBNET_REGION
+        - SUBNET_RANGE
+    dir: '{{.USER_WORKING_DIR}}'
+    vars:
+      _PRIVATE_GOOGLE_ACCESS: '{{.PRIVATE_GOOGLE_ACCESS | default "no"}}'
+      _ENABLE_FLOW_LOGS: '{{.ENABLE_FLOW_LOGS | default "no"}}'
+    cmds:
+      - task: gcloud_compute_net_subnets:create
+        vars:
+          PRIVATE_GOOGLE_ACCESS: '{{._PRIVATE_GOOGLE_ACCESS}}'
+          ENABLE_FLOW_LOGS: '{{._ENABLE_FLOW_LOGS}}'
+
+  create_vpc_connector:
+    requires:
+      vars:
+        - GCP_PROJECT
+        - VPC_NETWORK
+        - CONNECTOR_NAME
+        - CONNECTOR_REGION
+        - CONNECTOR_SUBNET
+        - CONNECTOR_MIN_INSTANCES
+        - CONNECTOR_MAX_INSTANCES
+        - CONNECTOR_MACHINE_TYPE
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds: 
+      - task: gcloud_compute_net_s8s:create_using_subnet

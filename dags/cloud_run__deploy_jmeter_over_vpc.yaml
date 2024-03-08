@@ -1,6 +1,9 @@
 group: cloud_run
 tags: cloud_run,step_2
-description: https://cloud.google.com/run/docs/configuring/vpc-connectors#gcloud_1
+description: |
+  https://cloud.google.com/vpc/docs/create-modify-vpc-networks
+  https://cloud.google.com/run/docs/configuring/vpc-connectors#gcloud_1
+  https://github.com/gchux/jmeter-test-runner
 env:
   - _NAMESPACE: cloud_run
   - _TARGET: deploy_jmeter_over_vpc
@@ -10,6 +13,8 @@ env:
   - _TASK_CMD: task -t ${_TASK_FILE} -v
   - _DAG_CMD: ${_BIN_DIR}/${_DAG_NAME}
   - GCP_PROJECT: ${GOOGLE_CLOUD_PROJECT}
+  - DEPLOY_JMETER__DAG: ${_DAGS_DIR}/${_NAMESPACE}__deploy_jmeter.yaml
+  - CREATE_VPC_CONNECTOR__DAG: ${_DAGS_DIR}/serverless__create_vpc_connector.yaml
 params: >-
   GCP_PROJECT=<gcp_project>
   GCP_SERVICES=cloudbuild,artifactregistry,run,compute,vpcaccess
@@ -17,14 +22,16 @@ params: >-
   RUN_REGION=us-west2
   REPO_LOCATION=us-west2
   REPO_NAME=training
-functions:
-  - name: start_dag
-    params: namespace target params
-    command: >-
-      dag start
-      --params='${params}'
-      --config="${_DAGS_CFG}"
-      "${_DAGS_DIR}/${namespace}__${target}.yaml"
+  VPC_NETWORK=default
+  SUBNET_NAME=jmeter-subnet
+  IP_RANGE=192.168.0.0/28
+  PRIVATE_GOOGLE_ACCESS=no
+  ENABLE_FLOW_LOGS=no
+  CONNECTOR_NAME=jmeter-connector
+  CONNECTOR_MIN_INSTANCES=2
+  CONNECTOR_MAX_INSTANCES=5
+  CONNECTOR_MACHINE=f1-micro
+  VPC_EGRESS=private-ranges-only
 steps:
   - name: prepare_work_dir
     command: bash
@@ -36,17 +43,43 @@ steps:
       chmod +x ${_DAG_CMD}
   - name: deploy_jmeter
     dir: ${_DAG_WORK_DIR}
-    call:
-      function: start_dag
-      args:
-        namespace: cloud_run
-        target: deploy_jmeter
-        params: >-
-          GCP_PROJECT="${GCP_PROJECT}"
-          GCP_SERVICES="cloudbuild,artifactregistry,run"
-          RUN_SERVICE="${RUN_SERVICE}"
-          RUN_REGION="${RUN_REGION}"
-          REPO_LOCATION="${REPO_LOCATION}"
-          REPO_NAME="${REPO_NAME}"
+    command: >-
+      dag ${DEPLOY_JMETER__DAG}
+      "GCP_PROJECT=${GCP_PROJECT}
+      GCP_SERVICES=cloudbuild,artifactregistry,run
+      RUN_SERVICE=${RUN_SERVICE}
+      RUN_REGION=${RUN_REGION}
+      REPO_LOCATION=${REPO_LOCATION}
+      REPO_NAME=${REPO_NAME}"
     depends:
       - prepare_work_dir
+  - name: create_vpc_connector
+    dir: ${_DAG_WORK_DIR}
+    command: >-
+      dag ${CREATE_VPC_CONNECTOR__DAG}
+      "GCP_PROJECT=${GCP_PROJECT}
+      GCP_SERVICES=compute,vpcaccess
+      VPC_NETWORK=${VPC_NETWORK}
+      SUBNET_NAME=${SUBNET_NAME}
+      SUBNET_REGION=${RUN_REGION}
+      SUBNET_RANGE=${IP_RANGE}
+      PRIVATE_GOOGLE_ACCESS=${PRIVATE_GOOGLE_ACCESS}
+      ENABLE_FLOW_LOGS=${ENABLE_FLOW_LOGS}
+      CONNECTOR_NAME=${CONNECTOR_NAME}
+      CONNECTOR_MIN_INSTANCES=${CONNECTOR_MIN_INSTANCES}
+      CONNECTOR_MAX_INSTANCES=${CONNECTOR_MAX_INSTANCES}
+      CONNECTOR_MACHINE_TYPE=${CONNECTOR_MACHINE}
+      VPC_EGRESS=${VPC_EGRESS}"
+    depends:
+      - prepare_work_dir
+  - name: update_run_service
+    command: >-
+      run ${_DAG_NAME} update_run_service
+      "GCP_PROJECT=${GCP_PROJECT}
+      RUN_SERVICE=${RUN_SERVICE}
+      RUN_REGION=${RUN_REGION}
+      VPC_CONNECTOR=${CONNECTOR_NAME}
+      VPC_EGRESS=${VPC_EGRESS}"
+    depends:
+      - deploy_jmeter
+      - create_vpc_connector

@@ -39,8 +39,11 @@ tasks:
     requires:
       vars: [GCP_PROJECT]
     dir: '{{.USER_WORKING_DIR}}'
-    cmds: 
+    cmds:
       - task: gcloud_app:deploy
+        vars:
+          GAE_SERVICE: '{{.GAE_SERVICE | default "default"}}'
+          GAE_VERSION: '{{.GAE_VERSION | default "v1-0-0"}}'
 
   describe_service:
     requires:

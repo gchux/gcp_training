@@ -15,7 +15,9 @@ env:
   - GIT_REPO_DIR: ${GIT_ROOT_DIR}/appengine/flexible/hello_world
 params: >-
   GCP_PROJECT=<gcp_project>
-  GCP_SERVICES=cloudbuild,artifactregistry,appenginestandard,appengineflex
+  GCP_SERVICES=cloudbuild,artifactregistry,appenginestandard,appengineflex,compute
+  GAE_SERVICE=helloworld
+  GAE_VERSION=v1-0-0
 steps:
   - name: prepare_work_dir
     command: bash
@@ -42,7 +44,11 @@ steps:
       - set_gcp_project
   - name: deploy_app
     dir: ${GIT_REPO_DIR}
-    command: run ${_DAG_NAME} deploy_app "GCP_PROJECT=${GCP_PROJECT}"
+    command: >-
+      run ${_DAG_NAME} deploy_app
+      "GCP_PROJECT=${GCP_PROJECT}
+      GAE_SERVICE=${GAE_SERVICE}
+      GAE_VERSION=${GAE_VERSION}"
     depends:
       - clone_git_repo
       - enable_services

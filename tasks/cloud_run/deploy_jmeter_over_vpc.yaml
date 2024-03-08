@@ -1,0 +1,19 @@
+version: '3'
+
+includes:
+  gcloud_run:
+    taskfile: "../gcloud/run.yaml"
+
+tasks:
+
+  update_run_service:
+    requires:
+      vars:
+        - GCP_PROJECT
+        - RUN_SERVICE
+        - RUN_REGION
+        - VPC_CONNECTOR
+    dir: '{{.USER_WORKING_DIR}}'
+    vars:
+    cmds:
+      - task: gcloud_run:run_services:set_vpc_connector

@@ -6,18 +6,25 @@ includes:
     aliases: [run_services]
 
 vars:
-  GCLOUD_CMD: 'gcloud run'
+  RUN_CMD: 'gcloud run'
 
 tasks:
 
   default:
     cmds:
-      - echo '{{.GCLOUD_CMD}} ...'
+      - echo '{{.RUN_CMD}} ...'
 
-  deploy_container_image:
+  deploy:
+    aliases:
+      - update_service
+      - deploy_container_image
     requires:
-      vars: [GCP_PROJECT, RUN_SERVICE, RUN_REGION, IMAGE_TAG]
+      vars: [GCP_PROJECT, RUN_SERVICE, RUN_REGION]
     vars:
+      _CMD: >-
+        {{if eq .TASK "update_service"}}
+        {{.RUN_CMD}} services update
+        {{else}}{{.RUN_CMD}}{{end}}
       _CONCURRENCY: '{{.CONCURRENCY | default "1"}}'
       _MIN_INSTANCES: '{{.MIX_INSTANCES | default "0"}}'
       _MAX_INSTANCES: '{{.MAX_INSTANCES | default "1"}}'
@@ -37,12 +44,13 @@ tasks:
     dir: '{{.USER_WORKING_DIR}}'
     cmds:
       - >-
-        {{.GCLOUD_CMD}} deploy {{.RUN_SERVICE}}
-        --image={{.IMAGE_TAG}}
+        {{.RUN_CMD}} deploy
+        {{.RUN_SERVICE}}
+        --project={{.GCP_PROJECT}}
+        --region={{.RUN_REGION}}
         --concurrency={{._CONCURRENCY}}
         --min-instances={{._MIN_INSTANCES}}
         --max-instances={{._MAX_INSTANCES}}
-        --region={{.RUN_REGION}}
         --timeout={{._TIMEOUT}}
         --cpu={{._CPU}}
         --memory={{._MEMORY}}
@@ -55,8 +63,8 @@ tasks:
         --{{if eq ._SSN_AFFINITY "no"}}no-{{end}}session-affinity
         --{{if eq ._USE_HTTP2 "no"}}no-{{end}}use-http2
         --{{if eq ._AUTHENTICATE "yes"}}no-{{end}}allow-unauthenticated
+        --{{if .VPC_CONNECTOR}}vpc-connector={{.VPC_CONNECTOR}}{{else}}clear-vpc-connector{{end}}
+        {{if .VPC_EGRESS}}--vpc-egress={{._VPC_EGRESS}}{{end}}
+        {{if .IMAGE_TAG}}--image={{.IMAGE_TAG}}{{end}}
         {{if .ENV_VARS}}--set-env-vars={{.ENV_VARS}}{{end}}
         {{if .SERVICE_ACCOUNT}}--service-account={{.SERVICE_ACCOUNT}}{{end}}
-        {{if .VPC_CONNECTOR}}--vpc-connector={{.VPC_CONNECTOR}}{{end}}
-        {{if .VPC_EGRESS}}--vpc-egress={{._VPC_EGRESS}}{{end}}
-        --project={{.GCP_PROJECT}}
