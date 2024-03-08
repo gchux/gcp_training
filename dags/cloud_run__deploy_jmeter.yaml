@@ -16,6 +16,7 @@ env:
 params: >-
   GCP_PROJECT=<gcp_project>
   GCP_SERVICES=cloudbuild,artifactregistry,run
+  RUN_SERVICE=jmeter-test-executor
   RUN_REGION=us-west2
   REPO_LOCATION=us-west2
   REPO_NAME=training
@@ -67,11 +68,17 @@ steps:
       - build_container_image
   - name: deploy_run_service
     dir: ${GIT_REPO_DIR}
-    command: run ${_DAG_NAME} deploy_run_service "GCP_PROJECT=${GCP_PROJECT} RUN_REGION=${RUN_REGION} AR_REPO=${REPO_NAME} AR_LOCATION=${REPO_LOCATION}"
+    command: >-
+      run ${_DAG_NAME} deploy_run_service
+      "GCP_PROJECT=${GCP_PROJECT}
+      RUN_SERVICE=${RUN_SERVICE}
+      RUN_REGION=${RUN_REGION}
+      AR_REPO=${REPO_NAME}
+      AR_LOCATION=${REPO_LOCATION}"
     depends:
       - push_container_image
   - name: describe_run_service
     dir: ${GIT_REPO_DIR}
-    command: run ${_DAG_NAME} describe_run_service "GCP_PROJECT=${GCP_PROJECT} RUN_REGION=${RUN_REGION}"
+    command: run ${_DAG_NAME} describe_run_service "GCP_PROJECT=${GCP_PROJECT} RUN_SERVICE=${RUN_SERVICE} RUN_REGION=${RUN_REGION}"
     depends:
       - deploy_run_service

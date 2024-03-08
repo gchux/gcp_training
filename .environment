@@ -1,4 +1,6 @@
-REPO_DIR=$(pwd)
+REPO_DIR=$(git rev-parse --show-toplevel)
+
+export _DAGS_ENV="${REPO_DIR}/.environment"
 
 BIN_DIR="${REPO_DIR}/bin"
 export _BIN_DIR=${BIN_DIR}
@@ -28,8 +30,10 @@ DAGU_CMD="${DAGU_BIN} server"
 export DAGU_LOG_DIR="${DAGU_TMP_DIR}/logs"
 export DAGU_ADMIN_LOG_DIR=${DAGU_LOG_DIR}
 export DAGU_DATA_DIR="${DAGU_TMP_DIR}/data"
-export DAGU_DAGS="${REPO_DIR}/dags"
-export DAGU_BASE_CONFIG="${REPO_DIR}/dags.yaml"
+export _DAGS_DIR="${REPO_DIR}/dags"
+export DAGU_DAGS=${_DAGS_DIR}
+export _DAGS_CFG="${REPO_DIR}/dags.yaml"
+export DAGU_BASE_CONFIG=${_DAGS_CFG}
 export DAGU_HOST=${DAGU_HTTP_HOST}
 export DAGU_PORT=${DAGU_HTTP_PORT}
 export _WORK_DIR="${DAGU_TMP_DIR}/work_dir"
@@ -38,3 +42,5 @@ export DAGU_NAVBAR_TITLE="GCP"
 
 YQ_DL_URL='https://github.com/mikefarah/yq/releases/download/v4.42.1/yq_linux_amd64'
 YQ_BIN="${BIN_DIR}/yq"
+
+export PATH=${BIN_DIR}:${PATH}

@@ -91,10 +91,12 @@ tasks:
     requires:
       vars: [GCP_PROJECT, RUN_REGION, AR_REPO, AR_LOCATION]
     dir: '{{.USER_WORKING_DIR}}'
+    vars:
+      RUN_SVC: '{{.RUN_SERVICE | default ._ARTIFACT_NAME}}'
     cmds: 
       - task: gcloud_run:deploy_container_image
         vars:
-          RUN_SERVICE: '{{._ARTIFACT_NAME}}'
+          RUN_SERVICE: '{{.RUN_SVC}}'
           MAX_INSTANCES: 1
           MIN_INSTANCES: 0
           CPU_BOOST: no
@@ -111,9 +113,11 @@ tasks:
     requires:
       vars: [GCP_PROJECT, RUN_REGION]
     dir: '{{.USER_WORKING_DIR}}'
+    vars:
+      RUN_SVC: '{{.RUN_SERVICE | default ._ARTIFACT_NAME}}'
     cmds:
       - task: gcloud_run:run_services:describe
         vars:
-          RUN_SERVICE: '{{._ARTIFACT_NAME}}'
+          RUN_SERVICE: '{{.RUN_SVC}}'
           FORMAT: flattened
 

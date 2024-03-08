@@ -35,6 +35,8 @@ RUN_CMD="${BIN_DIR}/run"
 echo -e "#!/bin/bash\necho "run: \${1}/\${2}[\${3}]"\nexec env ${BIN_DIR}/\${1} \${2} \"\${@:3}\"" > ${RUN_CMD}
 chmod +x ${RUN_CMD}
 
-export PATH=${BIN_DIR}:${PATH}
+DAG_CMD="${BIN_DIR}/dag"
+echo -e "#!/bin/bash\nsource ${_DAGS_ENV}\nexec env ${DAGU_BIN} start --params=\"\${@:2}\" \${1}" > ${DAG_CMD}
+chmod +x ${DAG_CMD}
 
 exec env ${DAGU_CMD} --host=${DAGU_HOST} --port=${DAGU_PORT} --dags=${DAGU_DAGS} --config=${DAGU_BASE_CONFIG}
