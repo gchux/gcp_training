@@ -1,6 +1,9 @@
 group: cloud_run
 tags: cloud_run,step_2
-description: https://cloud.google.com/run/docs/configuring/vpc-connectors#gcloud_1
+description: |
+  https://cloud.google.com/vpc/docs/create-modify-vpc-networks
+  https://cloud.google.com/run/docs/configuring/vpc-connectors#gcloud_1
+  https://github.com/gchux/jmeter-test-runner
 env:
   - _NAMESPACE: cloud_run
   - _TARGET: deploy_jmeter_over_vpc
