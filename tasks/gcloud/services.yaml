@@ -25,4 +25,4 @@ tasks:
       vars: [SERVICE]
     dir: '{{.USER_WORKING_DIR}}'
     cmds:
-      - cmd: '{{.GCLOUD_CMD}} enable {{.SERVICE}}.googleapis.com --format=json'
+      - cmd: '{{.GCLOUD_CMD}} enable {{trimAll "\"" .SERVICE}}.googleapis.com --format=json'

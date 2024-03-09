@@ -10,12 +10,21 @@ export _TMP_DIR=${TMP_DIR}
 DIRENV_DL_URL='https://github.com/direnv/direnv/releases/download/v2.34.0/direnv.linux-amd64'
 DIRENV_BIN="${BIN_DIR}/direnv"
 
+YQ_DL_URL='https://github.com/mikefarah/yq/releases/download/v4.42.1/yq_linux_amd64'
+YQ_BIN="${BIN_DIR}/yq"
+
 TASK_DL_URL='https://github.com/go-task/task/releases/download/v3.35.0/task_linux_amd64.tar.gz'
 TASK_TMP_DIR="${REPO_DIR}/tmp/task"
 TASK_DL_TGZ="${TASK_TMP_DIR}/task.tar.gz"
 TASK_TMP_BIN="${TASK_TMP_DIR}/task"
 TASK_BIN="${BIN_DIR}/task"
 export _TASKS_DIR="${REPO_DIR}/tasks"
+
+XH_DL_URL='https://github.com/ducaale/xh/releases/download/v0.21.0/xh-v0.21.0-x86_64-unknown-linux-musl.tar.gz'
+XH_TMP_DIR="${REPO_DIR}/tmp/xh"
+XH_DL_TGZ="${XH_TMP_DIR}/xh.tar.gz"
+XH_TMP_BIN="${XH_TMP_DIR}/xh"
+XH_BIN="${BIN_DIR}/xh"
 
 DAGU_DL_URL='https://github.com/dagu-dev/dagu/releases/download/v1.12.9/dagu_1.12.9_linux_amd64.tar.gz'
 DAGU_TMP_DIR="${REPO_DIR}/tmp/dagu"
@@ -39,8 +48,5 @@ export DAGU_PORT=${DAGU_HTTP_PORT}
 export _WORK_DIR="${DAGU_TMP_DIR}/work_dir"
 export DAGU_WORK_DIR=${_WORK_DIR}
 export DAGU_NAVBAR_TITLE="GCP"
-
-YQ_DL_URL='https://github.com/mikefarah/yq/releases/download/v4.42.1/yq_linux_amd64'
-YQ_BIN="${BIN_DIR}/yq"
 
 export PATH=${BIN_DIR}:${PATH}

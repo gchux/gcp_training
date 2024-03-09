@@ -1,0 +1,54 @@
+group: identity_platform
+tags: identity_platform,step_2
+description: https://github.com/gchux/jmeter-test-runner
+env:
+  - _NAMESPACE: identity_platform
+  - _TARGET: deploy_oidc_server
+  - _DAG_NAME: ${_NAMESPACE}__${_TARGET}
+  - _DAG_WORK_DIR: ${_WORK_DIR}/${_DAG_NAME}
+  - _TASK_FILE: ${_TASKS_DIR}/${_NAMESPACE}/${_TARGET}.yaml
+  - _TASK_CMD: task -t ${_TASK_FILE} -v
+  - _DAG_CMD: ${_BIN_DIR}/${_DAG_NAME}
+  - GCP_PROJECT: ${GOOGLE_CLOUD_PROJECT}
+  - GIT_REPO_URL: https://github.com/gchux/oidc-idp-server.git
+  - GIT_ROOT_DIR: ${_DAG_WORK_DIR}/oidc-idp-server
+  - GIT_REPO_DIR: ${GIT_ROOT_DIR}
+params: >-
+  GCP_PROJECT=<gcp_project>
+  GCP_SERVICES=cloudbuild,appenginestandard,identitytoolkit
+  GAE_SERVICE=oidc-idp-server
+  OIDC_DOMAIN=oidc.app
+steps:
+  - name: prepare_work_dir
+    command: bash
+    script: |
+      rm -f ${_DAG_CMD}
+      rm -rf ${_DAG_WORK_DIR}
+      mkdir -p ${_DAG_WORK_DIR}
+      echo -e "#!/bin/bash\n${_TASK_CMD} \$1 \$2" > ${_DAG_CMD}
+      chmod +x ${_DAG_CMD}
+  - name: clone_git_repo
+    dir: ${_DAG_WORK_DIR}
+    command: run ${_DAG_NAME} clone_git_repo "GIT_REPO_URL=${GIT_REPO_URL} GIT_REPO_DIR=${GIT_ROOT_DIR}"
+    depends:
+      - prepare_work_dir
+  - name: set_gcp_project
+    dir: ${_DAG_WORK_DIR}
+    command: run ${_DAG_NAME} set_gcp_project "GCP_PROJECT=${GCP_PROJECT}"
+    depends:
+      - prepare_work_dir
+  - name: enable_services
+    dir: ${_DAG_WORK_DIR}
+    command: run ${_DAG_NAME} enable_services "GCP_PROJECT=${GCP_PROJECT} GCP_SERVICES=${GCP_SERVICES}"
+    depends:
+      - set_gcp_project
+  - name: deploy_oidc_server
+    dir: ${GIT_REPO_DIR}
+    command: >-
+      run ${_DAG_NAME} deploy_oidc_server
+      "GCP_PROJECT=${GCP_PROJECT}
+      GAE_SERVICE=${GAE_SERVICE}
+      OIDC_DOMAIN=${OIDC_DOMAIN}"
+    depends:
+      - clone_git_repo
+      - enable_services
