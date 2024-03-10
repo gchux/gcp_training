@@ -1,6 +1,8 @@
 group: cloud_run
 tags: cloud_run,step_2
-description: https://github.com/gchux/jmeter-test-runner
+description: |-
+  https://github.com/gchux/latency-simulator,
+  https://cloud.google.com/run/docs/quickstarts/deploy-container
 env:
   - _NAMESPACE: cloud_run
   - _TARGET: deploy_latency_simulator
