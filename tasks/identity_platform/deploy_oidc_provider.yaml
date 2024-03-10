@@ -19,7 +19,10 @@ tasks:
     vars:
       GAE_VERSIONS_FILE: '{{.USER_WORKING_DIR}}/gae_versions.json'
       GAE_ENV_VARS_FILE: '{{.USER_WORKING_DIR}}/gae_env_vars.json'
-      VERSIONS_FILTER: '.[0].version.id'
+      REQUIRED_VARS: |-
+        OIDC_ISSUER
+        OIDC_CLIENT_ID
+        OIDC_CLIENT_SECRET
     cmds:
       - task: gcloud_appengine:app_versions:list
         vars:
@@ -29,14 +32,14 @@ tasks:
       - task: gcloud_appengine:app_versions:describe
         vars:
           GAE_VERSION:
-            sh: 'jq -rcM ''{{.VERSIONS_FILTER}}'' {{.GAE_VERSIONS_FILE}}'
+            sh: 'jq -rcM ''.[0].version.id'' {{.GAE_VERSIONS_FILE}}'
           FORMAT: '''json(envVariables)'''
           OUTPUT: '{{.GAE_ENV_VARS_FILE}}'
       - |
-        OIDC_CLIENT_ID=`jq -rcM '.envVariables.OIDC_CLIENT_ID' {{.GAE_ENV_VARS_FILE}}`
-        OIDC_CLIENT_SECRET=`jq -rcM '.envVariables.OIDC_CLIENT_SECRET' {{.GAE_ENV_VARS_FILE}}`
-        OIDC_ISSUER=`jq -rcM '.envVariables.OIDC_ISSUER' {{.GAE_ENV_VARS_FILE}}`
-        cat << EOF > {{.OIDC_IDP_JSON}}
+        {{range $i, $v := .REQUIRED_VARS | splitLines -}}
+        {{$v}}=`jq -rcM '.envVariables.{{$v}}' {{.GAE_ENV_VARS_FILE}}`
+        {{end}}
+        cat << EOF | tee {{.OIDC_IDP_JSON}}
         {
           "name": "{{.PROVIDER_NAME}}",
           "clientId": "${OIDC_CLIENT_ID}",
@@ -59,66 +62,9 @@ tasks:
     dir: '{{.USER_WORKING_DIR}}'
     deps:
       - task: produce_oidc_provider
-    vars:
-      HOSTNAME: '{{.AUTHORIZED_PORT}}-{{.AUTHORIZED_DOMAIN}}'
-      API_KEY: '{{.USER_WORKING_DIR}}/apiKey.json'
-      AUTHORIZED_DOMAINS: '{{.USER_WORKING_DIR}}/authorizedDomains.json'
-      CLIENT_PERMISSIONS: '{{.USER_WORKING_DIR}}/clientPermissions.json'
     cmds:
       - task: gcloud_identity:providers:create_oidc
         vars:
           GCP_PROJECT: '{{.GCP_PROJECT}}'
           PROVIDER_NAME: '{{.PROVIDER_NAME}}'
           PROVIDER_JSON: '@{{.OIDC_IDP_JSON}}'
-      - task: gcloud_identity:get_config
-        vars:
-          GCP_PROJECT: '{{.GCP_PROJECT}}'
-          FIELD: client.apiKey
-          OUTPUT: '{{.API_KEY}}'
-      - task: gcloud_identity:get_config
-        vars:
-          GCP_PROJECT: '{{.GCP_PROJECT}}'
-          FIELD: authorizedDomains
-          OUTPUT: '{{.AUTHORIZED_DOMAINS}}'
-      - >-
-        jq -rcM '. -= ["{{.HOSTNAME}}"]' < '{{.AUTHORIZED_DOMAINS}}'
-        | jq -rcM '. += ["{{.HOSTNAME}}"] | {authorizedDomains:.}'
-        | sponge '{{.AUTHORIZED_DOMAINS}}'
-      - task: gcloud_identity:update_config
-        vars:
-          GCP_PROJECT: '{{.GCP_PROJECT}}'
-          FIELD_KEY: authorizedDomains
-          FIELD_VALUE: '@{{.AUTHORIZED_DOMAINS}}'
-      - task: gcloud_identity:get_config
-        vars:
-          GCP_PROJECT: '{{.GCP_PROJECT}}'
-          FIELD: client.permissions
-          OUTPUT: '{{.CLIENT_PERMISSIONS}}'
-      - >-
-        jq -rcM '.disabledUserSignup=false | {client:{permissions:.}}'
-        < '{{.CLIENT_PERMISSIONS}}'
-        | sponge '{{.USER_WORKING_DIR}}/clientPermissions.json'
-      - task: gcloud_identity:update_config
-        vars:
-          GCP_PROJECT: '{{.GCP_PROJECT}}'
-          FIELD_KEY: client.permissions
-          FIELD_VALUE: '@{{.CLIENT_PERMISSIONS}}'
-      - |-
-        API_KEY=`cat {{.API_KEY}} | tr -d '\n'`
-        cat << EOF > index.html
-        <script src="https://www.gstatic.com/firebasejs/8.0/firebase.js"></script>
-        <script>
-        var config = {apiKey:"${API_KEY}",authDomain:"{{.GCP_PROJECT}}.firebaseapp.com"};
-        firebase.initializeApp(config);
-        var provider = new firebase.auth.OAuthProvider('oidc.{{.PROVIDER_NAME}}');
-        firebase.auth().signInWithPopup(provider)
-        .then((result) => {
-        console.log(result);
-        document.body.innerHTML = '<pre id="json"></pre>';
-        document.getElementById("json").innerText = JSON.stringify(result, null, 2);
-        })
-        .catch((error) => { console.log(error); });
-        </script>
-        EOF
-      - cmd: 'echo go to: https://{{.HOSTNAME}}/'
-      - python -m http.server {{.AUTHORIZED_PORT}}
