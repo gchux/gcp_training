@@ -1,6 +1,9 @@
 group: identity_platform
 tags: identity_platform,step_2
-description: https://github.com/gchux/jmeter-test-runner
+description: |-
+  https://cloud.google.com/identity-platform/docs/web/oidc,
+  https://firebase.google.com/docs/auth/web/openid-connect,
+  https://github.com/gchux/oidc-idp-server
 env:
   - _NAMESPACE: identity_platform
   - _TARGET: deploy_oidc_provider
