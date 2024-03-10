@@ -1,0 +1,84 @@
+version: '3'
+
+includes:
+  gcloud_identity:
+    taskfile: "../gcloud/identity.yaml"
+
+vars:
+  API_KEY_FIELD: client.apiKey
+  CLIENT_PERMISSIONS_FIELD: client.permissions
+  AUTHORIZED_DOMAINS_FIELD: authorizedDomains
+  IDP_CONFIG_FIELDS: '{{.CLIENT_PERMISSIONS_FIELD}},{{.AUTHORIZED_DOMAINS_FIELD}}'
+  IDP_CONFIG: '{{.USER_WORKING_DIR}}/idp_config.json'
+  NEW_IDP_CONFIG: '{{.USER_WORKING_DIR}}/new_idp_config.json'
+
+tasks:
+
+  get_idp_config:
+    requires:
+      vars: [GCP_PROJECT]
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds:
+      - task: gcloud_identity:get_config
+        vars:
+          GCP_PROJECT: '{{.GCP_PROJECT}}'
+          FIELDS: '{{.API_KEY_FIELD}},{{.IDP_CONFIG_FIELDS}}'
+          OUTPUT: '{{.IDP_CONFIG}}'
+
+  update_idp_config:
+    deps:
+      - task: get_idp_config
+    requires:
+      vars: [AUTHORIZED_DOMAIN, AUTHORIZED_PORT]
+    dir: '{{.USER_WORKING_DIR}}'
+    vars:
+      HOSTNAME: '{{.AUTHORIZED_PORT}}-{{.AUTHORIZED_DOMAIN}}'
+    cmds:
+      - >-
+        cat {{.IDP_CONFIG}}
+        | jq -rcM '.{{.AUTHORIZED_DOMAINS_FIELD}} -= ["{{.HOSTNAME}}"]'
+        | jq -rcM '.{{.AUTHORIZED_DOMAINS_FIELD}} += ["{{.HOSTNAME}}"]'
+        | jq -rcM '.{{.CLIENT_PERMISSIONS_FIELD}}.disabledUserSignup=false'
+        | jq -rcM 'del(.{{.API_KEY_FIELD}})'
+        | tee {{.NEW_IDP_CONFIG}}
+
+  patch_idp_config:
+    deps:
+      - task: update_idp_config
+    requires:
+      vars: [GCP_PROJECT]
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds:
+      - task: gcloud_identity:update_config
+        vars:
+          GCP_PROJECT: '{{.GCP_PROJECT}}'
+          MASK: '{{.IDP_CONFIG_FIELDS}}'
+          CONFIG: '@{{.NEW_IDP_CONFIG}}'
+        ignore_error: true
+
+  test_oidc_provider:
+    deps:
+      - task: patch_idp_config
+    requires:
+      vars: [GCP_PROJECT, AUTHORIZED_DOMAIN, AUTHORIZED_PORT]
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds:
+      - |-
+        API_KEY=`jq -rcM '.{{.API_KEY_FIELD}}' < {{.IDP_CONFIG}} | tr -d '\n'`
+        cat << EOF > index.html
+        <script src="https://www.gstatic.com/firebasejs/8.0/firebase.js"></script>
+        <script>
+        var config = {apiKey:"${API_KEY}",authDomain:"{{.GCP_PROJECT}}.firebaseapp.com"};
+        firebase.initializeApp(config);
+        var provider = new firebase.auth.OAuthProvider('oidc.{{.PROVIDER_NAME}}');
+        firebase.auth().signInWithPopup(provider)
+        .then((result) => {
+        console.log(result);
+        document.body.innerHTML = '<pre id="json"></pre>';
+        document.getElementById("json").innerText = JSON.stringify(result, null, 2);
+        })
+        .catch((error) => { console.log(error); });
+        </script>
+        EOF
+      - cmd: 'echo go to: https://{{.AUTHORIZED_PORT}}-{{.AUTHORIZED_DOMAIN}}/'
+      - python -m http.server {{.AUTHORIZED_PORT}}

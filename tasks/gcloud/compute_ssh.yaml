@@ -1,0 +1,37 @@
+version: '3'
+
+vars:
+  G_COMPUTE_SSH_CMD: 'gcloud compute ssh'
+
+tasks:
+
+  default:
+    cmds:
+      - cmd: echo '{{.G_COMPUTE_SSH_CMD}} ...'
+
+  exec:
+    requires:
+      vars:
+        - GCP_PROJECT
+        - INSTANCE_NAME
+        - INSTANCE_ZONE
+        - SSH_COMMAND
+    vars:
+      INSTANCE_EXISTS:
+        sh: >-
+          gcloud compute instances list
+          --zones={{.INSTANCE_ZONE}}
+          --project={{.GCP_PROJECT}}
+          --format='json(name)'
+          --filter='name={{.INSTANCE_NAME}}'
+          | jq -crM '. | length'
+    cmds:
+      - >-
+        [ {{.INSTANCE_EXISTS}} = 1 ] &&
+        {{.G_COMPUTE_SSH_CMD}}
+        {{.INSTANCE_NAME}}
+        --project={{.GCP_PROJECT}}
+        --zone={{.INSTANCE_ZONE}}
+        --command="{{.SSH_COMMAND}}"
+        --tunnel-through-iap
+        || echo  'not found: projects/{{.GCP_PROJECT}}/zones/{{.INSTANCE_ZONE}}/instance/{{.INSTANCE_NAME}}'

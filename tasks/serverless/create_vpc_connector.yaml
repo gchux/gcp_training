@@ -1,10 +1,8 @@
 version: '3'
 
 includes:
-  gcloud_compute_net_subnets:
-    taskfile: "../gcloud/compute_networks_subnets.yaml"
-  gcloud_compute_net_s8s: 
-    taskfile: "../gcloud/compute_networks_s8s.yaml"
+  gcloud_compute:
+    taskfile: "../gcloud/compute.yaml"
 
 tasks:
 
@@ -21,7 +19,7 @@ tasks:
       _PRIVATE_GOOGLE_ACCESS: '{{.PRIVATE_GOOGLE_ACCESS | default "no"}}'
       _ENABLE_FLOW_LOGS: '{{.ENABLE_FLOW_LOGS | default "no"}}'
     cmds:
-      - task: gcloud_compute_net_subnets:create
+      - task: gcloud_compute:networks:subnetworks:create
         vars:
           PRIVATE_GOOGLE_ACCESS: '{{._PRIVATE_GOOGLE_ACCESS}}'
           ENABLE_FLOW_LOGS: '{{._ENABLE_FLOW_LOGS}}'
@@ -38,5 +36,5 @@ tasks:
         - CONNECTOR_MAX_INSTANCES
         - CONNECTOR_MACHINE_TYPE
     dir: '{{.USER_WORKING_DIR}}'
-    cmds: 
-      - task: gcloud_compute_net_s8s:create_using_subnet
+    cmds:
+      - task: gcloud_compute:networks:serverless:create_using_subnet

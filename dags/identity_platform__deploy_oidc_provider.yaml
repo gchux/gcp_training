@@ -1,6 +1,9 @@
 group: identity_platform
 tags: identity_platform,step_2
-description: https://github.com/gchux/jmeter-test-runner
+description: |-
+  https://cloud.google.com/identity-platform/docs/web/oidc,
+  https://firebase.google.com/docs/auth/web/openid-connect,
+  https://github.com/gchux/oidc-idp-server
 env:
   - _NAMESPACE: identity_platform
   - _TARGET: deploy_oidc_provider
@@ -11,7 +14,6 @@ env:
   - _DAG_CMD: ${_BIN_DIR}/${_DAG_NAME}
   - GCP_PROJECT: ${GOOGLE_CLOUD_PROJECT}
   - DEPLOY_OIDC_SERVER__DAG: ${_DAGS_DIR}/${_NAMESPACE}__deploy_oidc_server.yaml
-  - HOSTNAME: ${WEB_HOST}
 params: >-
   GCP_PROJECT=<gcp_project>
   GCP_SERVICES=cloudbuild,appenginestandard,identitytoolkit
@@ -19,7 +21,6 @@ params: >-
   OIDC_DOMAIN=oidc.app
   PROVIDER_NAME=test-provider
   SKIP_SERVER=no
-  AUTHORIZED_PORT=8888
 steps:
   - name: prepare_work_dir
     command: bash
@@ -50,8 +51,6 @@ steps:
       run ${_DAG_NAME} create_oidc_provider
       "GCP_PROJECT=${GCP_PROJECT}
       GAE_SERVICE=${GAE_SERVICE}
-      PROVIDER_NAME=${PROVIDER_NAME}
-      AUTHORIZED_DOMAIN=${HOSTNAME}
-      AUTHORIZED_PORT=${AUTHORIZED_PORT}"
+      PROVIDER_NAME=${PROVIDER_NAME}"
     depends:
       - deploy_oidc_server

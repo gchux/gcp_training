@@ -7,6 +7,7 @@ tasks:
     requires:
       vars: [METHOD, ENDPOINT, QUERY, HEADERS]
     vars:
+      OUTPUT: '{{.OUTPUT | default "-"}}'
     cmds:
       - >-
         xh --https --ignore-stdin
@@ -17,14 +18,13 @@ tasks:
         --pretty=format {{if .OUTPUT}}--body{{else}}--verbose{{end}}
         {{.METHOD}} {{.ENDPOINT}} {{.QUERY}} {{.HEADERS}}
         {{if .BODY}}{{if hasPrefix "@" .BODY}}{{.BODY}}{{end}}{{else}}--raw='{{.BODY}}'{{end}}
-        | tee {{.OUTPUT | default "/dev/stdout"}}
+        {{if eq .OUTPUT "-"}}> /dev/stdout{{.OUTPUT}}{{else}}| tee {{.OUTPUT}}{{end}}
 
-  request:
+  exec_*:
     requires:
       vars: [ENDPOINT, QUERY, HEADERS]
     vars:
-      METHOD: '{{splitList " " .ENDPOINT | first}}'
-      ENDPOINT: '{{.ENDPOINT | replace .METHOD ""}}'
+      METHOD: '{{index .MATCH 0}}'
     cmds:
       - task: exec
         vars:
@@ -34,4 +34,21 @@ tasks:
           HEADERS: '{{.HEADERS}}'
           BODY: '{{.BODY}}'
           BEARER: '{{.BEARER | default ""}}'
+          OUTPUT: '{{.OUTPUT}}'
+
+  request:
+    requires:
+      vars: [ENDPOINT, QUERY, HEADERS]
+    vars:
+      METHOD: '{{splitList " " .ENDPOINT | first | trim | lower}}'
+      ENDPOINT: '{{.ENDPOINT | replace .METHOD "" | trim}}'
+    cmds:
+      - task: exec_{{.METHOD}}
+        vars:
+          METHOD: '{{.METHOD}}'
+          ENDPOINT: '{{.ENDPOINT}}'
+          QUERY: '{{.QUERY}}'
+          HEADERS: '{{.HEADERS}}'
+          BODY: '{{.BODY}}'
+          BEARER: '{{.BEARER}}'
           OUTPUT: '{{.OUTPUT}}'

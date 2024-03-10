@@ -1,25 +1,27 @@
 group: identity_platform
 tags: identity_platform,step_2
 description: |-
-  https://cloud.google.com/identity-platform/docs/web/oidc
+  https://firebase.google.com/docs/auth/web/openid-connect
   https://github.com/gchux/oidc-idp-server
 env:
   - _NAMESPACE: identity_platform
-  - _TARGET: deploy_oidc_server
+  - _TARGET: test_oidc_provider
   - _DAG_NAME: ${_NAMESPACE}__${_TARGET}
   - _DAG_WORK_DIR: ${_WORK_DIR}/${_DAG_NAME}
   - _TASK_FILE: ${_TASKS_DIR}/${_NAMESPACE}/${_TARGET}.yaml
   - _TASK_CMD: task -t ${_TASK_FILE} -v
   - _DAG_CMD: ${_BIN_DIR}/${_DAG_NAME}
   - GCP_PROJECT: ${GOOGLE_CLOUD_PROJECT}
-  - GIT_REPO_URL: https://github.com/gchux/oidc-idp-server.git
-  - GIT_ROOT_DIR: ${_DAG_WORK_DIR}/oidc-idp-server
-  - GIT_REPO_DIR: ${GIT_ROOT_DIR}
+  - DEPLOY_OIDC_PROVIDER__DAG: ${_DAGS_DIR}/${_NAMESPACE}__deploy_oidc_provider.yaml
+  - HOSTNAME: ${WEB_HOST}
 params: >-
   GCP_PROJECT=<gcp_project>
   GCP_SERVICES=cloudbuild,appenginestandard,identitytoolkit
   GAE_SERVICE=oidc-idp-server
   OIDC_DOMAIN=oidc.app
+  PROVIDER_NAME=test-provider
+  SKIP_SERVER=no
+  AUTHORIZED_PORT=8888
 steps:
   - name: prepare_work_dir
     command: bash
@@ -29,28 +31,26 @@ steps:
       mkdir -p ${_DAG_WORK_DIR}
       echo -e "#!/bin/bash\n${_TASK_CMD} \$1 \$2" > ${_DAG_CMD}
       chmod +x ${_DAG_CMD}
-  - name: clone_git_repo
+  - name: deploy_oidc_provider
     dir: ${_DAG_WORK_DIR}
-    command: run ${_DAG_NAME} clone_git_repo "GIT_REPO_URL=${GIT_REPO_URL} GIT_REPO_DIR=${GIT_ROOT_DIR}"
-    depends:
-      - prepare_work_dir
-  - name: set_gcp_project
-    dir: ${_DAG_WORK_DIR}
-    command: run ${_DAG_NAME} set_gcp_project "GCP_PROJECT=${GCP_PROJECT}"
-    depends:
-      - prepare_work_dir
-  - name: enable_services
-    dir: ${_DAG_WORK_DIR}
-    command: run ${_DAG_NAME} enable_services "GCP_PROJECT=${GCP_PROJECT} GCP_SERVICES=${GCP_SERVICES}"
-    depends:
-      - set_gcp_project
-  - name: deploy_oidc_server
-    dir: ${GIT_REPO_DIR}
     command: >-
-      run ${_DAG_NAME} deploy_oidc_server
+      dag ${DEPLOY_OIDC_PROVIDER__DAG}
+      "GCP_PROJECT=${GCP_PROJECT}
+      GCP_SERVICES=cloudbuild,appenginestandard,identitytoolkit
+      GAE_SERVICE=${GAE_SERVICE}
+      PROVIDER_NAME=${PROVIDER_NAME}
+      OIDC_DOMAIN=${OIDC_DOMAIN}
+      SKIP_SERVER=${SKIP_SERVER}"
+    depends:
+      - prepare_work_dir
+  - name: test_oidc_provider
+    dir: ${_DAG_WORK_DIR}
+    command: >-
+      run ${_DAG_NAME} test_oidc_provider
       "GCP_PROJECT=${GCP_PROJECT}
       GAE_SERVICE=${GAE_SERVICE}
-      OIDC_DOMAIN=${OIDC_DOMAIN}"
+      PROVIDER_NAME=${PROVIDER_NAME}
+      AUTHORIZED_DOMAIN=${HOSTNAME}
+      AUTHORIZED_PORT=${AUTHORIZED_PORT}"
     depends:
-      - clone_git_repo
-      - enable_services
+      - deploy_oidc_provider
