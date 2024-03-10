@@ -14,7 +14,7 @@ tasks:
 
   default:
     cmds:
-      - cmd: echo '{{IDENTITY_GAPI}} ...'
+      - cmd: echo '{{.IDENTITY_GAPI}} ...'
 
   get_config:
     requires:
@@ -24,42 +24,40 @@ tasks:
     dir: '{{.USER_WORKING_DIR}}'
     vars:
       PARENT: 'projects/{{.GCP_PROJECT}}'
-      FIELD: '{{.FIELD | default "*"}}'
-      JQ_KEY: '{{if eq .FIELD "*"}}.{{else}}.{{.FIELD}}{{end}}'
+      FIELDS: '{{.FIELDS | default "*"}}'
     cmds:
-      - task: https:request
+      - task: https:exec_get
         vars:
           BEARER: 'google:access_token'
-          ENDPOINT: 'GET {{.IDENTITY_GAPI}}/{{.PARENT}}/config'
+          ENDPOINT: '{{.IDENTITY_GAPI}}/{{.PARENT}}/config'
           QUERY: >-
-            fields=={{.FIELD}}
+            fields=={{.FIELDS}}
           HEADERS: >-
             content-type:'application/json'
             accept:'application/json'
             x-goog-user-project:{{.GCP_PROJECT}}
           OUTPUT: '{{.OUTPUT}}'
-      - jq -rcM '{{.JQ_KEY}}' < {{.OUTPUT}} | sponge {{.OUTPUT}}
       - cat -n {{.OUTPUT}}
 
   update_config:
     requires:
       vars:
         - GCP_PROJECT
-        - FIELD_KEY
-        - FIELD_VALUE
+        - MASK
+        - CONFIG
     dir: '{{.USER_WORKING_DIR}}'
     vars:
       PARENT: 'projects/{{.GCP_PROJECT}}'
     cmds:
-      - task: https:request
+      - task: https:exec_patch
         vars:
           BEARER: 'google:access_token'
-          ENDPOINT: 'PATCH {{.IDENTITY_GAPI}}/{{.PARENT}}/config'
+          ENDPOINT: '{{.IDENTITY_GAPI}}/{{.PARENT}}/config'
           QUERY: >-
-            updateMask=={{.FIELD_KEY}}
-            fields=={{.FIELD_KEY}}
+            updateMask=={{.MASK}}
+            fields=={{.MASK}}
           HEADERS: >-
             content-type:'application/json'
             accept:'application/json'
             x-goog-user-project:{{.GCP_PROJECT}}
-          BODY: '{{.FIELD_VALUE}}'
+          BODY: '{{.CONFIG}}'

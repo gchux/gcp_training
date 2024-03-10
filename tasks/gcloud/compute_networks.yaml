@@ -1,0 +1,18 @@
+version: '3'
+
+includes:
+  gcloud_compute_networks_subnets:
+    taskfile: "compute_networks_subnets.yaml"
+    aliases: [subnetworks]
+  gcloud_compute_networks_s8s:
+    taskfile: "compute_networks_s8s.yaml"
+    aliases: [serverless]
+
+vars:
+  G_COMPUTE_NET_CMD: 'gcloud compute networks'
+
+tasks:
+
+  default:
+    cmds:
+      - cmd: echo '{{.G_COMPUTE_NET_CMD}} ...'

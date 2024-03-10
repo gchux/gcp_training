@@ -3,14 +3,15 @@ tags: identity_platform,step_2
 description: https://github.com/gchux/jmeter-test-runner
 env:
   - _NAMESPACE: identity_platform
-  - _TARGET: deploy_oidc_provider
+  - _TARGET: test_oidc_provider
   - _DAG_NAME: ${_NAMESPACE}__${_TARGET}
   - _DAG_WORK_DIR: ${_WORK_DIR}/${_DAG_NAME}
   - _TASK_FILE: ${_TASKS_DIR}/${_NAMESPACE}/${_TARGET}.yaml
   - _TASK_CMD: task -t ${_TASK_FILE} -v
   - _DAG_CMD: ${_BIN_DIR}/${_DAG_NAME}
   - GCP_PROJECT: ${GOOGLE_CLOUD_PROJECT}
-  - DEPLOY_OIDC_SERVER__DAG: ${_DAGS_DIR}/${_NAMESPACE}__deploy_oidc_server.yaml
+  - DEPLOY_OIDC_PROVIDER__DAG: ${_DAGS_DIR}/${_NAMESPACE}__deploy_oidc_provider.yaml
+  - HOSTNAME: ${WEB_HOST}
 params: >-
   GCP_PROJECT=<gcp_project>
   GCP_SERVICES=cloudbuild,appenginestandard,identitytoolkit
@@ -18,6 +19,7 @@ params: >-
   OIDC_DOMAIN=oidc.app
   PROVIDER_NAME=test-provider
   SKIP_SERVER=no
+  AUTHORIZED_PORT=8888
 steps:
   - name: prepare_work_dir
     command: bash
@@ -27,27 +29,26 @@ steps:
       mkdir -p ${_DAG_WORK_DIR}
       echo -e "#!/bin/bash\n${_TASK_CMD} \$1 \$2" > ${_DAG_CMD}
       chmod +x ${_DAG_CMD}
-  - name: deploy_oidc_server
+  - name: deploy_oidc_provider
     dir: ${_DAG_WORK_DIR}
     command: >-
-      dag ${DEPLOY_OIDC_SERVER__DAG}
+      dag ${DEPLOY_OIDC_PROVIDER__DAG}
       "GCP_PROJECT=${GCP_PROJECT}
       GCP_SERVICES=cloudbuild,appenginestandard,identitytoolkit
       GAE_SERVICE=${GAE_SERVICE}
-      OIDC_DOMAIN=${OIDC_DOMAIN}"
-    preconditions:
-      - condition: "${SKIP_SERVER}"
-        expected: "no"
-    continueOn:
-      skipped: true
+      PROVIDER_NAME=${PROVIDER_NAME}
+      OIDC_DOMAIN=${OIDC_DOMAIN}
+      SKIP_SERVER=${SKIP_SERVER}"
     depends:
       - prepare_work_dir
-  - name: create_oidc_provider
+  - name: test_oidc_provider
     dir: ${_DAG_WORK_DIR}
     command: >-
-      run ${_DAG_NAME} create_oidc_provider
+      run ${_DAG_NAME} test_oidc_provider
       "GCP_PROJECT=${GCP_PROJECT}
       GAE_SERVICE=${GAE_SERVICE}
-      PROVIDER_NAME=${PROVIDER_NAME}"
+      PROVIDER_NAME=${PROVIDER_NAME}
+      AUTHORIZED_DOMAIN=${HOSTNAME}
+      AUTHORIZED_PORT=${AUTHORIZED_PORT}"
     depends:
-      - deploy_oidc_server
+      - deploy_oidc_provider

@@ -15,10 +15,10 @@ tasks:
     dir: '{{.USER_WORKING_DIR}}'
     vars: { PARENT: 'projects/{{.GCP_PROJECT}}' }
     cmds:
-      - task: https:request
+      - task: https:exec_post
         vars:
           BEARER: 'google:access_token'
-          ENDPOINT: 'POST {{.IDENTITY_GAPI}}/{{.PARENT}}/oauthIdpConfigs'
+          ENDPOINT: '{{.IDENTITY_GAPI}}/{{.PARENT}}/oauthIdpConfigs'
           QUERY: >-
             oauthIdpConfigId==oidc.{{.PROVIDER_NAME}}
           HEADERS: >-

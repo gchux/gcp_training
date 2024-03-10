@@ -1,0 +1,96 @@
+version: '3'
+
+includes:
+  gcloud_compute:
+    taskfile: "../gcloud/compute.yaml"
+
+tasks:
+
+  create_subnet:
+    intarnal: true
+    requires:
+      vars:
+        - GCP_PROJECT
+        - VPC_NETWORK
+        - SUBNET_NAME
+        - SUBNET_REGION
+        - SUBNET_RANGE
+    dir: '{{.USER_WORKING_DIR}}'
+    vars:
+      _PRIVATE_GOOGLE_ACCESS: '{{.PRIVATE_GOOGLE_ACCESS | default "no"}}'
+      _ENABLE_FLOW_LOGS: '{{.ENABLE_FLOW_LOGS | default "no"}}'
+    cmds:
+      - task: gcloud_compute:networks:subnetworks:create
+        vars:
+          SUBNET_NAME: '{{.INSTANCE_SUBNET_NAME}}'
+          SUBNET_REGION: '{{.INSTANCE_SUBNET_REGION}}'
+          SUBNET_RANGE: '{{.INSTANCE_SUBNET_RANGE}}'
+          PRIVATE_GOOGLE_ACCESS: '{{._PRIVATE_GOOGLE_ACCESS}}'
+          ENABLE_FLOW_LOGS: '{{._ENABLE_FLOW_LOGS}}'
+
+  create_vpc_subnet:
+    requires:
+      vars:
+        - GCP_PROJECT
+        - VPC_NETWORK
+        - INSTANCE_SUBNET_NAME
+        - INSTANCE_SUBNET_REGION
+        - INSTANCE_SUBNET_RANGE
+    cmds:
+      - task: create_subnet
+        vars:
+          SUBNET_NAME: '{{.INSTANCE_SUBNET_NAME}}'
+          SUBNET_REGION: '{{.INSTANCE_SUBNET_REGION}}'
+          SUBNET_RANGE: '{{.INSTANCE_SUBNET_RANGE}}'
+          PRIVATE_GOOGLE_ACCESS: '{{.INSTANCE_SUBNET_PGA}}'
+          ENABLE_FLOW_LOGS: '{{.INSTANCE_SUBNET_LOGS}}'
+
+  create_gce_instance:
+    requires:
+      vars:
+        - GCP_PROJECT
+        - VPC_NETWORK
+        - INSTANCE_NAME
+        - INSTANCE_REGION
+        - INSTANCE_ZONE
+        - INSTANCE_SUBNET_NAME
+        - INSTANCE_MACHINE_TYPE
+        - INSTANCE_DISK_IMAGE
+        - INSTANCE_DISK_SIZE
+        - INSTANCE_DISK_TYPE
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds:
+      - task: gcloud_compute:instances:create
+
+  describe_gce_instance:
+    requires:
+      vars:
+        - GCP_PROJECT
+        - INSTANCE_NAME
+        - INSTANCE_ZONE
+    cmds:
+      - task: gcloud_compute:instances:describe
+        vars:
+          FORMAT: 'flattened(name,zone,status,networkInterfaces)'
+
+  install_web_server:
+    requires:
+      vars:
+        - GCP_PROJECT
+        - INSTANCE_NAME
+        - INSTANCE_ZONE
+    cmds:
+      - task: gcloud_compute:ssh:exec
+        vars:
+          SSH_COMMAND: 'sudo apt update && sudo apt -y install apache2'
+      - task: gcloud_compute:ssh:exec
+        vars:
+          SSH_COMMAND: 'sudo systemctl status apache2'
+      - task: gcloud_compute:ssh:exec
+        vars:
+          SSH_COMMAND: >-
+            echo '<!doctype html><html><body><h1>Hello World!</h1></body></html>'
+            | sudo tee /var/www/html/index.html
+      - task: gcloud_compute:ssh:exec
+        vars:
+          SSH_COMMAND: 'curl -ivL http://localhost/'

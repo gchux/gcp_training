@@ -1,0 +1,21 @@
+version: '3'
+
+includes:
+  gcloud_compute_instances:
+    taskfile: "compute_instances.yaml"
+    aliases: [instances]
+  gcloud_ssh_instances:
+    taskfile: "compute_ssh.yaml"
+    aliases: [ssh]
+  gcloud_compute_networks:
+    taskfile: "compute_networks.yaml"
+    aliases: [networks]
+
+vars:
+  G_COMPUTE_CMD: 'gcloud compute'
+
+tasks:
+
+  default:
+    cmds:
+      - cmd: echo '{{.G_COMPUTE_CMD}} ...'

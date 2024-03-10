@@ -7,38 +7,64 @@ includes:
     taskfile: "../gcloud/identity.yaml"
 
 vars:
-  OIDC_IDP_JSON: '{{.USER_WORKING_DIR}}/idp_provider.json'
+  GAE_ENV_VARS_FILE: '{{.USER_WORKING_DIR}}/gae_env_vars.json'
+  OIDC_IDP_ENV: '{{.USER_WORKING_DIR}}/.oidc_idp_env'
+  OIDC_IDP_JSON: '{{.USER_WORKING_DIR}}/oidc_idp.json'
 
 tasks:
 
-  produce_oidc_provider:
+  get_oidc_server_env:
     internal: true
     requires:
-      vars: [GCP_PROJECT, GAE_SERVICE, PROVIDER_NAME]
+      vars: [GCP_PROJECT, GAE_SERVICE]
     dir: '{{.USER_WORKING_DIR}}'
     vars:
       GAE_VERSIONS_FILE: '{{.USER_WORKING_DIR}}/gae_versions.json'
-      GAE_ENV_VARS_FILE: '{{.USER_WORKING_DIR}}/gae_env_vars.json'
-      REQUIRED_VARS: |-
-        OIDC_ISSUER
-        OIDC_CLIENT_ID
-        OIDC_CLIENT_SECRET
     cmds:
       - task: gcloud_appengine:app_versions:list
         vars:
+          GAE_SERVICE: '{{.GAE_SERVICE}}'
           FORMAT: '''json(version.id)'''
           FILTER: '''traffic_split=1.0'''
           OUTPUT: '{{.GAE_VERSIONS_FILE}}'
       - task: gcloud_appengine:app_versions:describe
         vars:
+          GAE_SERVICE: '{{.GAE_SERVICE}}'
           GAE_VERSION:
             sh: 'jq -rcM ''.[0].version.id'' {{.GAE_VERSIONS_FILE}}'
           FORMAT: '''json(envVariables)'''
           OUTPUT: '{{.GAE_ENV_VARS_FILE}}'
-      - |
-        {{range $i, $v := .REQUIRED_VARS | splitLines -}}
-        {{$v}}=`jq -rcM '.envVariables.{{$v}}' {{.GAE_ENV_VARS_FILE}}`
+
+  create_oidc_dotenv:
+    internal: true
+    deps:
+      - task: get_oidc_server_env
+    dir: '{{.USER_WORKING_DIR}}'
+    vars:
+      OIDC_VARS: |-
+        OIDC_ISSUER
+        OIDC_CLIENT_ID
+        OIDC_CLIENT_SECRET
+    cmds:
+      - rm -vf {{$.OIDC_IDP_ENV}}
+      - |-
+        {{range $i, $v := .OIDC_VARS | splitLines -}}
+        {{$v}}=`jq -rcM '.envVariables.{{$v}}' {{$.GAE_ENV_VARS_FILE}}`
+        echo "{{$v}}=${{$v}}" >> {{$.OIDC_IDP_ENV}}
         {{end}}
+      - cat -n {{.OIDC_IDP_ENV}}
+
+  create_oidc_config:
+    internal: true
+    deps:
+      - task: create_oidc_dotenv
+    requires:
+      vars: [PROVIDER_NAME]
+    dir: '{{.USER_WORKING_DIR}}'
+    dotenv: ['{{.OIDC_IDP_ENV}}']
+    cmds:
+      - |-
+        source {{.OIDC_IDP_ENV}}
         cat << EOF | tee {{.OIDC_IDP_JSON}}
         {
           "name": "{{.PROVIDER_NAME}}",
@@ -53,7 +79,7 @@ tasks:
           }
         }
         EOF
-        jq -rcM < {{.OIDC_IDP_JSON}} | sponge {{.OIDC_IDP_JSON}}
+      - jq -rcM < {{.OIDC_IDP_JSON}} | sponge {{.OIDC_IDP_JSON}}
       - cat -n {{.OIDC_IDP_JSON}}
 
   create_oidc_provider:
@@ -61,7 +87,7 @@ tasks:
       vars: [GCP_PROJECT, GAE_SERVICE, PROVIDER_NAME]
     dir: '{{.USER_WORKING_DIR}}'
     deps:
-      - task: produce_oidc_provider
+      - task: create_oidc_config
     cmds:
       - task: gcloud_identity:providers:create_oidc
         vars:

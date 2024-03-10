@@ -1,0 +1,10 @@
+version: '3'
+
+vars:
+  G_SQL_INSTANCES_CMD: 'gcloud sql instances'
+
+tasks:
+
+  default:
+    cmds:
+      - cmd: echo '{{.G_SQL_INSTANCES_CMD}} ...'

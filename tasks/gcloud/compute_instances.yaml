@@ -1,0 +1,89 @@
+version: '3'
+
+vars:
+  G_COMPUTE_INSTANCES_CMD: 'gcloud compute instances'
+  DEFAULT_INSTANCE_SCOPES_LIST: >-
+    https://www.googleapis.com/auth/devstorage.read_only,
+    https://www.googleapis.com/auth/logging.write,
+    https://www.googleapis.com/auth/monitoring.write,
+    https://www.googleapis.com/auth/servicecontrol,
+    https://www.googleapis.com/auth/service.management.readonly,
+    https://www.googleapis.com/auth/trace.append
+  DEFAULT_INSTANCE_SCOPES: '{{.DEFAULT_INSTANCE_SCOPES_LIST | replace ", " "," | trim}}'
+
+tasks:
+
+  default:
+    cmds:
+      - cmd: echo '{{.G_COMPUTE_INSTANCES_CMD}} ...'
+
+  describe:
+    requires:
+      vars:
+        - GCP_PROJECT
+        - INSTANCE_NAME
+        - INSTANCE_ZONE
+    vars:
+      _FORMAT: '{{.FORMAT | default "json"}}'
+      _OUTPUT: '{{.OUTPUT | default "/dev/stdout"}}'
+    cmds:
+      - >-
+        {{.G_COMPUTE_INSTANCES_CMD}}
+        describe {{.INSTANCE_NAME}}
+        --project={{.GCP_PROJECT}}
+        --zone={{.INSTANCE_ZONE}}
+        --format='{{._FORMAT}}'
+        > {{._OUTPUT}}
+
+  create:
+    requires:
+      vars:
+        - GCP_PROJECT
+        - INSTANCE_NAME
+        - INSTANCE_REGION
+        - INSTANCE_ZONE
+        - INSTANCE_SUBNET_NAME
+        - INSTANCE_MACHINE_TYPE
+        - INSTANCE_DISK_IMAGE
+        - INSTANCE_DISK_SIZE
+        - INSTANCE_DISK_TYPE
+    vars:
+      INSTANCE_EXISTS:
+        sh: >-
+          {{.G_COMPUTE_INSTANCES_CMD}} list
+          --zones={{.INSTANCE_ZONE}}
+          --project={{.GCP_PROJECT}}
+          --format='json(name)'
+          --filter='name={{.INSTANCE_NAME}}'
+          | jq -crM '. | length'
+      PROJECT_PREFIX: 'projects/{{.GCP_PROJECT}}'
+      ZONE_PREFIX: '{{.PROJECT_PREFIX}}/zones/{{.INSTANCE_ZONE}}'
+      DISK_ATTRIBUTES: >-
+        auto-delete=yes,
+        boot=yes,
+        device-name={{.INSTANCE_NAME}},
+        image={{.INSTANCE_DISK_IMAGE}},
+        mode=rw,size={{.INSTANCE_DISK_SIZE}},
+        type={{.ZONE_PREFIX}}/diskTypes/{{.INSTANCE_DISK_TYPE}}
+      INSTANCE_DISK: '{{.DISK_ATTRIBUTES | replace ", " "," | trim}}'
+    cmds:
+      - >-
+        [ {{.INSTANCE_EXISTS}} = 0 ] &&
+        {{.G_COMPUTE_INSTANCES_CMD}}
+        create {{.INSTANCE_NAME}}
+        --project={{.GCP_PROJECT}}
+        --zone={{.INSTANCE_ZONE}}
+        --machine-type={{.INSTANCE_MACHINE_TYPE}}
+        --network-interface=network-tier=PREMIUM,stack-type=IPV4_ONLY,subnet={{.INSTANCE_SUBNET_NAME}}
+        --create-disk={{.INSTANCE_DISK}}
+        --maintenance-policy=MIGRATE
+        --provisioning-model=STANDARD
+        --no-shielded-secure-boot
+        --no-shielded-vtpm
+        --no-shielded-integrity-monitoring
+        --labels=goog-ec-src=vm_add-gcloud
+        --reservation-affinity=any
+        {{if .INSTANCE_TAGS}}--tags={{.INSTANCE_TAGS}}{{end}}
+        {{if .INSTANCE_SERVICE_ACCOUNT}}--service-account={{.INSTANCE_SERVICE_ACCOUNT}}{{else}}--no-service-account --no-scopes{{end}}
+        {{if .INSTANCE_SERVICE_ACCOUNT}}--scopes={{if .INSTANCE_SCOPES}}{{.SCOPES}}{{else}}{{.DEFAULT_INSTANCE_SCOPES}}{{end}}{{end}}
+        || echo  'already exists: projects/{{.GCP_PROJECT}}/zones/{{.INSTANCE_ZONE}}/instance/{{.INSTANCE_NAME}}'

@@ -1,0 +1,15 @@
+version: '3'
+
+includes:
+  gcloud_sql_instances:
+    taskfile: "sql_instances.yaml"
+    aliases: [instances]
+
+vars:
+  G_SQL_CMD: 'gcloud sql'
+
+tasks:
+
+  default:
+    cmds:
+      - cmd: echo '{{.G_SQL_CMD}} ...'
