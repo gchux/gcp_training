@@ -33,9 +33,6 @@ tasks:
       - task: git:clone
         vars:
           GIT_BRANCH: '{{.GIT_REPO_BRANCH}}'
-      - task: git:checkout
-        vars:
-          GIT_BRANCH: '{{.GIT_REPO_BRANCH}}'
 
   set_gcp_project:
     requires:
