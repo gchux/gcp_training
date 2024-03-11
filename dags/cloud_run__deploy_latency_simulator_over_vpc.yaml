@@ -20,7 +20,7 @@ env:
   - DEPLOY_WEB_SERVER__DAG: ${_DAGS_DIR}/compute_engine__deploy_web_server.yaml
 params: >-
   GCP_PROJECT=<gcp_project>
-  GCP_SERVICES=cloudbuild,artifactregistry,run,compute
+  GCP_SERVICES=cloudbuild,artifactregistry,run,compute,vpcaccess
   RUN_REGION=us-west2
   RUN_PORT=8080
   RUN_TIMEOUT=60
