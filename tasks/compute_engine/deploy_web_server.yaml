@@ -80,6 +80,8 @@ tasks:
         - INSTANCE_NAME
         - INSTANCE_ZONE
     cmds:
+      - cmd: 'sleep 60'
+        silent: true
       - gcloud compute config-ssh
       - task: gcloud_compute:ssh:exec
         vars:

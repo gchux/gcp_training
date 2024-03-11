@@ -132,29 +132,29 @@ tasks:
           CPU_BOOST: yes
           CPU_THROTTLE: yes
           SSN_AFFINITTY: no
-          GENERATION: 1
+          GENERATION: 2
           TIMEOUT: '{{._RUN_TIMEOUT}}'
           PORT: '{{._RUN_PORT}}'
           CPU: 1
           MEMORY: 1Gi
-          ENV_VARS: 'LATENCY_PROFILE=/profiles/{{._LATENCY_PROFILE}},PROJECT={{.GCP_PROJECT}},PCAP_IFACE=eth0,PCAP_FILTER=''{{._PCAP_FILTER}}'''
+          ENV_VARS: 'LATENCY_PROFILE=/profiles/{{._LATENCY_PROFILE}},PROJECT={{.GCP_PROJECT}},PCAP_IFACE=eth0,PCAP_FILTER={{._PCAP_FILTER}}'
           IMAGE_TAG: '{{.AR_LOCATION}}-{{._AR_DOCKER_SUFFIX}}/{{.GCP_PROJECT}}/{{.AR_REPO}}/{{._ARTIFACT_NAME}}:{{._IMAGE_REVISION}}'
       - task: gcloud_run:run_services:set_health_checks
         vars:
           RUN_SERVICE: '{{._RUN_SERVICE}}'
           STARTUP_PROBE: "tcp"
           STARTUP_PORT: '{{._RUN_PORT}}'
-          STARTUP_INITIAL_DELAY_SECS: '{{.STARTUP_INITIAL_DELAY_SECS}}'
-          STARTUP_TIMEOUT_SECS: '{{.STARTUP_TIMEOUT_SECS}}'
-          STARTUP_FAILURE_THRESHOLD: '{{.STARTUP_FAILURE_THRESHOLD}}'
-          STARTUP_PERIOD_SECS: '{{.STARTUP_PERIOD_SECS}}'
+          STARTUP_INITIAL_DELAY_SECS: '{{.STARTUP_INITIAL_DELAY_SECS | default "5"}}'
+          STARTUP_TIMEOUT_SECS: '{{.STARTUP_TIMEOUT_SECS | default "5"}}'
+          STARTUP_PERIOD_SECS: '{{.STARTUP_PERIOD_SECS | default "10"}}'
+          STARTUP_FAILURE_THRESHOLD: '{{.STARTUP_FAILURE_THRESHOLD | default "10"}}'
           LIVENESS_PROBE: "http"
           LIVENESS_PORT: '{{._RUN_PORT}}'
           LIVENESS_HTTP_PATH: "/"
-          LIVENESS_INITIAL_DELAY_SECS: '{{.LIVENESS_INITIAL_DELAY_SECS}}'
-          LIVENESS_TIMEOUT_SECS: '{{.LIVENESS_TIMEOUT_SECS}}'
-          LIVENESS_FAILURE_THRESHOLD: '{{.LIVENESS_FAILURE_THRESHOLD}}'
-          LIVENESS_PERIOD_SECS: '{{.LIVENESS_PERIOD_SECS}}'
+          LIVENESS_INITIAL_DELAY_SECS: '{{.LIVENESS_INITIAL_DELAY_SECS | default "5"}}'
+          LIVENESS_TIMEOUT_SECS: '{{.LIVENESS_TIMEOUT_SECS | default "5"}}'
+          LIVENESS_PERIOD_SECS: '{{.LIVENESS_PERIOD_SECS | default "10"}}'
+          LIVENESS_FAILURE_THRESHOLD: '{{.LIVENESS_FAILURE_THRESHOLD | default "10"}}'
 
   describe_run_service:
     requires:
