@@ -31,7 +31,7 @@ params: >-
   CONNECTOR_MIN_INSTANCES=2
   CONNECTOR_MAX_INSTANCES=5
   CONNECTOR_MACHINE=f1-micro
-  VPC_EGRESS=private-ranges-only
+  VPC_EGRESS=all-traffic
 steps:
   - name: prepare_work_dir
     command: bash
