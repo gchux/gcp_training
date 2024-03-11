@@ -80,6 +80,7 @@ tasks:
         - INSTANCE_NAME
         - INSTANCE_ZONE
     cmds:
+      - gcloud compute config-ssh
       - task: gcloud_compute:ssh:exec
         vars:
           SSH_COMMAND: 'sudo apt update && sudo apt -y install apache2'

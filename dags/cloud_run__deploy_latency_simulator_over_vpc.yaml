@@ -181,8 +181,8 @@ steps:
     command: >-
       run ${_DAG_NAME} update_run_service
       "GCP_PROJECT=${GCP_PROJECT}
-      RUN_SERVICE=${RUN_SERVICE}
       RUN_REGION=${RUN_REGION}
+      LATENCY_PROFILE=${LATENCY_PROFILE}
       VPC_CONNECTOR=${CONNECTOR_NAME}
       VPC_EGRESS=${RUN_VPC_EGRESS}"
     depends:
