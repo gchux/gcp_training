@@ -31,6 +31,8 @@ tasks:
     dir: '{{.USER_WORKING_DIR}}'
     cmds:
       - task: git:clone
+        vars:
+          GIT_BRANCH: '{{.GIT_REPO_BRANCH}}'
       - task: git:checkout
         vars:
           GIT_BRANCH: '{{.GIT_REPO_BRANCH}}'
