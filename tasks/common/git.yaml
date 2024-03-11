@@ -6,13 +6,16 @@ tasks:
     requires:
       vars: [GIT_REPO_URL, GIT_REPO_DIR]
     dir: '{{.USER_WORKING_DIR}}'
+    vars:
+      GIT_BRANCH: '{{.GIT_BRANCH | default "main"}}'
     cmds: 
       - cmd: 'mkdir -p {{.GIT_REPO_DIR}}'
-      - cmd: 'git clone --depth=1 {{.GIT_REPO_URL}} {{.GIT_REPO_DIR}}'
+      - cmd: 'git clone --depth=1 --branch {{.GIT_BRANCH}} {{.GIT_REPO_URL}} {{.GIT_REPO_DIR}}'
 
   checkout:
     requires:
       vars: [GIT_REPO_URL, GIT_REPO_DIR, GIT_BRANCH]
     dir: '{{.USER_WORKING_DIR}}'
     cmds: 
+      - cmd: 'git fetch origin {{.GIT_BRANCH}}'
       - cmd: 'git checkout {{.GIT_BRANCH}}'
