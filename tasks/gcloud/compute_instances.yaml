@@ -86,4 +86,4 @@ tasks:
         {{if .INSTANCE_TAGS}}--tags={{.INSTANCE_TAGS}}{{end}}
         {{if .INSTANCE_SERVICE_ACCOUNT}}--service-account={{.INSTANCE_SERVICE_ACCOUNT}}{{else}}--no-service-account --no-scopes{{end}}
         {{if .INSTANCE_SERVICE_ACCOUNT}}--scopes={{if .INSTANCE_SCOPES}}{{.SCOPES}}{{else}}{{.DEFAULT_INSTANCE_SCOPES}}{{end}}{{end}}
-        || echo  'already exists: projects/{{.GCP_PROJECT}}/zones/{{.INSTANCE_ZONE}}/instance/{{.INSTANCE_NAME}}'
+        || echo  'failed: projects/{{.GCP_PROJECT}}/zones/{{.INSTANCE_ZONE}}/instance/{{.INSTANCE_NAME}}'

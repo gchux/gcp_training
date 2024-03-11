@@ -40,7 +40,7 @@ tasks:
         --project={{.GCP_PROJECT}}
         {{if eq ._PRIVATE_GOOGLE_ACCESS "yes"}}--enable-private-ip-google-access{{end}}
         {{if eq ._ENABLE_FLOW_LOGS "yes"}}--enable-flow-logs{{end}}
-        || echo  'already exists: projects/{{.GCP_PROJECT}}/regions/{{.SUBNET_REGION}}/subnetworks/{{.SUBNET_NAME}}'
+        || echo  'failed: projects/{{.GCP_PROJECT}}/regions/{{.SUBNET_REGION}}/subnetworks/{{.SUBNET_NAME}}'
 
   describe:
     requires:

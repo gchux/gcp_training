@@ -34,4 +34,4 @@ tasks:
         --zone={{.INSTANCE_ZONE}}
         --command="{{.SSH_COMMAND}}"
         --tunnel-through-iap
-        || echo  'not found: projects/{{.GCP_PROJECT}}/zones/{{.INSTANCE_ZONE}}/instance/{{.INSTANCE_NAME}}'
+        || echo  'failed: projects/{{.GCP_PROJECT}}/zones/{{.INSTANCE_ZONE}}/instance/{{.INSTANCE_NAME}}'

@@ -43,7 +43,7 @@ tasks:
         --description='{{.REPO_DESCRIPTION}}'
         --project={{.GCP_PROJECT}}
         --format=json ||
-        echo "already exists: projects/{{.GCP_PROJECT}}/locations/{{.REPO_LOCATION}}/repositories/{{.REPO_NAME}}"
+        echo "failed: projects/{{.GCP_PROJECT}}/locations/{{.REPO_LOCATION}}/repositories/{{.REPO_NAME}}"
 
   create:
     requires:
