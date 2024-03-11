@@ -9,3 +9,10 @@ tasks:
     cmds: 
       - cmd: 'mkdir -p {{.GIT_REPO_DIR}}'
       - cmd: 'git clone --depth=1 {{.GIT_REPO_URL}} {{.GIT_REPO_DIR}}'
+
+  checkout:
+    requires:
+      vars: [GIT_REPO_URL, GIT_REPO_DIR, GIT_BRANCH]
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds: 
+      - cmd: 'git checkout {{.GIT_BRANCH}}'

@@ -1,0 +1,183 @@
+version: '3'
+
+includes:
+  git:
+    taskfile: "../common/git.yaml"
+  docker:
+    taskfile: "../common/docker.yaml"
+  gcloud_config:
+    taskfile: "../gcloud/config.yaml"
+  gcloud_services:
+    taskfile: "../gcloud/services.yaml"
+  gcloud_auth:
+    taskfile: "../gcloud/auth.yaml"
+  gcloud_artifacts_repositories:
+    taskfile: "../gcloud/artifacts_repositories.yaml"
+  gcloud_run:
+    taskfile: "../gcloud/run.yaml"
+
+vars:
+  _AR_SUFFIX: 'pkg.dev'
+  _AR_DOCKER_SUFFIX: 'docker.{{._AR_SUFFIX}}'
+  _DOCKER_FILE: Dockerfile.pcap
+  _ARTIFACT_NAME: latency-simulator-vpc-pcap
+  _IMAGE_REVISION: latest
+
+tasks:
+
+  clone_git_repo:
+    requires:
+      vars: [GIT_REPO_URL, GIT_REPO_DIR, GIT_REPO_BRANCH]
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds:
+      - task: git:clone
+      - task: git:checkout
+        vars:
+          GIT_BRANCH: '{{.GIT_REPO_BRANCH}}'
+
+  set_gcp_project:
+    requires:
+      vars: [GCP_PROJECT]
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds: 
+      - task: gcloud_config:set_project
+
+  enable_services:
+    requires:
+      vars: [GCP_PROJECT, GCP_SERVICES]
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds: 
+      - task: gcloud_services:enable
+        vars:
+          SERVICES: '{{.GCP_SERVICES}}'
+
+  create_docker_repository:
+    requires: 
+      vars: [GCP_PROJECT, AR_LOCATION, AR_REPO]
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds:
+      - task: gcloud_artifacts_repositories:create_if_not_exists
+        vars:
+          REPO_NAME: '{{.AR_REPO}}'
+          REPO_LOCATION: '{{.AR_LOCATION}}'
+          REPO_FORMAT: docker
+          REPO_DESCRIPTION: "Docker repository"
+
+  authorize_docker:
+    requires:
+      vars: [GCP_PROJECT, AR_LOCATION]
+    dir: '{{.USER_WORKING_DIR}}'
+    vars:
+      _REPO_HOST: '{{.AR_LOCATION}}-{{._AR_DOCKER_SUFFIX}}'
+    cmds:
+      - task: gcloud_auth:configure_docker
+        vars:
+          REPO_HOST: '{{._REPO_HOST}}'
+
+  build_container_image:
+    requires:
+      vars: [GCP_PROJECT, AR_LOCATION, AR_REPO]
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds:
+      - task: docker:build_image_no_cache
+        vars:
+          DOCKER_FILE: '{{_DOCKER_FILE}}'
+          IMAGE_TAG: '{{.AR_LOCATION}}-{{._AR_DOCKER_SUFFIX}}/{{.GCP_PROJECT}}/{{.AR_REPO}}/{{._ARTIFACT_NAME}}:{{._IMAGE_REVISION}}'
+
+  push_container_image:
+    requires:
+      vars: [GCP_PROJECT, AR_LOCATION, AR_REPO]
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds:
+      - task: docker:push_image
+        vars:
+          IMAGE_TAG: '{{.AR_LOCATION}}-{{._AR_DOCKER_SUFFIX}}/{{.GCP_PROJECT}}/{{.AR_REPO}}/{{._ARTIFACT_NAME}}:{{._IMAGE_REVISION}}'
+
+  deploy_run_service:
+    requires:
+      vars:
+        - GCP_PROJECT
+        - RUN_REGION
+        - RUN_PORT
+        - RUN_TIMEOUT
+        - RUN_CONCURRENCY
+        - RUN_MIN_INSTANCES
+        - RUN_MAX_INSTANCES
+        - AR_REPO
+        - AR_LOCATION
+        - LATENCY_PROFILE
+        - PCAP_FILTER
+        - STARTUP_INITIAL_DELAY_SECS
+        - STARTUP_TIMEOUT_SECS
+        - STARTUP_PERIOD_SECS
+        - STARTUP_FAILURE_THRESHOLD
+        - LIVENESS_INITIAL_DELAY_SECS
+        - LIVENESS_TIMEOUT_SECS
+        - LIVENESS_PERIOD_SECS
+        - LIVENESS_FAILURE_THRESHOLD
+    dir: '{{.USER_WORKING_DIR}}'
+    vars:
+      _RUN_SERVICE: '{{._ARTIFACT_NAME}}'
+      _RUN_PORT: '{{.RUN_PORT | default "8080"}}'
+      _RUN_TIMEOUT: '{{.RUN_TIMEOUT | default "60"}}'
+      _LATENCY_PROFILE: '{{.LATENCY_PROFILE | default "default"}}'
+      _PCAP_FILTER: '{{.PCAP_FILTER | default "tcp or udp"}}'
+    cmds:
+      - task: gcloud_run:deploy_container_image
+        vars:
+          RUN_SERVICE: '{{._RUN_SERVICE}}'
+          CONCURRENCY: '{{.RUN_CONCURRENCY | default "80"}}'
+          MIN_INSTANCES: '{{.RUN_MIN_INSTANCES | default "0"}}'
+          MAX_INSTANCES: '{{.RUN_MAX_INSTANCES | default "3"}}'
+          MIN_INSTANCES: 0
+          CPU_BOOST: yes
+          CPU_THROTTLE: yes
+          SSN_AFFINITTY: no
+          GENERATION: 1
+          TIMEOUT: '{{._RUN_TIMEOUT}}'
+          PORT: '{{._RUN_PORT}}'
+          CPU: 1
+          MEMORY: 1Gi
+          ENV_VARS: 'LATENCY_PROFILE=/profiles/{{._LATENCY_PROFILE}},PROJECT={{.GCP_PROJECT}},PCAP_IFACE=eth0,PCAP_FILTER=''{{._PCAP_FILTER}}'''
+          IMAGE_TAG: '{{.AR_LOCATION}}-{{._AR_DOCKER_SUFFIX}}/{{.GCP_PROJECT}}/{{.AR_REPO}}/{{._ARTIFACT_NAME}}:{{._IMAGE_REVISION}}'
+      - task: gcloud_run:run_services:set_health_checks
+        vars:
+          RUN_SERVICE: '{{.LATENCY_PROFILE}}-{{._RUN_SERVICE}}'
+          STARTUP_PROBE: "tcp"
+          STARTUP_PORT: '{{._RUN_PORT}}'
+          STARTUP_INITIAL_DELAY_SECS: '{{.STARTUP_INITIAL_DELAY_SECS}}'
+          STARTUP_TIMEOUT_SECS: '{{.STARTUP_TIMEOUT_SECS}}'
+          STARTUP_FAILURE_THRESHOLD: '{{.STARTUP_FAILURE_THRESHOLD}}'
+          STARTUP_PERIOD_SECS: '{{.STARTUP_PERIOD_SECS}}'
+          LIVENESS_PROBE: "http"
+          LIVENESS_PORT: '{{._RUN_PORT}}'
+          LIVENESS_HTTP_PATH: "/"
+          LIVENESS_INITIAL_DELAY_SECS: '{{.LIVENESS_INITIAL_DELAY_SECS}}'
+          LIVENESS_TIMEOUT_SECS: '{{.LIVENESS_TIMEOUT_SECS}}'
+          LIVENESS_FAILURE_THRESHOLD: '{{.LIVENESS_FAILURE_THRESHOLD}}'
+          LIVENESS_PERIOD_SECS: '{{.LIVENESS_PERIOD_SECS}}'
+
+  describe_run_service:
+    requires:
+      vars: [GCP_PROJECT, RUN_REGION, LATENCY_PROFILE]
+    dir: '{{.USER_WORKING_DIR}}'
+    vars:
+      _RUN_SERVICE: '{{._ARTIFACT_NAME}}'
+    cmds:
+      - task: gcloud_run:run_services:describe
+        vars:
+          RUN_SERVICE: '{{.LATENCY_PROFILE}}-{{._RUN_SERVICE}}'
+          FORMAT: flattened
+
+  update_run_service:
+    requires:
+      vars:
+        - GCP_PROJECT
+        - RUN_SERVICE
+        - RUN_REGION
+        - VPC_CONNECTOR
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds:
+      - task: gcloud_run:run_services:set_vpc_connector
+        vars:
+          VPC_EGRESS: '{{.VPC_EGRESS | default "private-ranges-only"}}'
