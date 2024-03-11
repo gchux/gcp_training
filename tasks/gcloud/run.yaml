@@ -66,5 +66,5 @@ tasks:
         --{{if .VPC_CONNECTOR}}vpc-connector={{.VPC_CONNECTOR}}{{else}}clear-vpc-connector{{end}}
         {{if .VPC_EGRESS}}--vpc-egress={{._VPC_EGRESS}}{{end}}
         {{if .IMAGE_TAG}}--image={{.IMAGE_TAG}}{{end}}
-        {{if .ENV_VARS}}--set-env-vars={{.ENV_VARS}}{{end}}
+        {{if .ENV_VARS}}--set-env-vars='{{.ENV_VARS}}'{{end}}
         {{if .SERVICE_ACCOUNT}}--service-account={{.SERVICE_ACCOUNT}}{{end}}

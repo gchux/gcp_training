@@ -26,7 +26,7 @@ params: >-
   RUN_VPC_EGRESS=private-ranges-only
   REPO_NAME=training
   LATENCY_PROFILE=default
-  PCAP_FILTER=tcp or udp
+  PCAP_FILTER='tcp or udp'
   VPC_NETWORK=default
   PRIVATE_GOOGLE_ACCESS=no
   ENABLE_FLOW_LOGS=no
