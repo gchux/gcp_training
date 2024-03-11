@@ -80,7 +80,7 @@ tasks:
     cmds:
       - task: docker:build_image_no_cache
         vars:
-          DOCKER_FILE: '{{_DOCKER_FILE}}'
+          DOCKER_FILE: '{{._DOCKER_FILE}}'
           IMAGE_TAG: '{{.AR_LOCATION}}-{{._AR_DOCKER_SUFFIX}}/{{.GCP_PROJECT}}/{{.AR_REPO}}/{{._ARTIFACT_NAME}}:{{._IMAGE_REVISION}}'
 
   push_container_image:
