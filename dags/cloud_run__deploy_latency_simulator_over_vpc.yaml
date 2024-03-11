@@ -67,22 +67,22 @@ steps:
       - set_gcp_project
   - name: create_docker_repository
     dir: ${_DAG_WORK_DIR}
-    command: run ${_DAG_NAME} create_docker_repository "GCP_PROJECT=${GCP_PROJECT} AR_REPO=${REPO_NAME} AR_LOCATION=${REPO_LOCATION}"
+    command: run ${_DAG_NAME} create_docker_repository "GCP_PROJECT=${GCP_PROJECT} AR_REPO=${REPO_NAME} AR_LOCATION=${RUN_REGION}"
     depends:
       - enable_services
   - name: authorize_docker
     dir: ${_DAG_WORK_DIR}
-    command: run ${_DAG_NAME} authorize_docker "GCP_PROJECT=${GCP_PROJECT} AR_LOCATION=${REPO_LOCATION}"
+    command: run ${_DAG_NAME} authorize_docker "GCP_PROJECT=${GCP_PROJECT} AR_LOCATION=${RUN_REGION}"
     depends:
       - enable_services
   - name: build_container_image
     dir: ${GIT_REPO_DIR}
-    command: run ${_DAG_NAME} build_container_image "GCP_PROJECT=${GCP_PROJECT} AR_REPO=${REPO_NAME} AR_LOCATION=${REPO_LOCATION}"
+    command: run ${_DAG_NAME} build_container_image "GCP_PROJECT=${GCP_PROJECT} AR_REPO=${REPO_NAME} AR_LOCATION=${RUN_REGION}"
     depends:
       - clone_git_repo
   - name: push_container_image
     dir: ${GIT_REPO_DIR}
-    command: run ${_DAG_NAME} push_container_image "GCP_PROJECT=${GCP_PROJECT} AR_REPO=${REPO_NAME} AR_LOCATION=${REPO_LOCATION}"
+    command: run ${_DAG_NAME} push_container_image "GCP_PROJECT=${GCP_PROJECT} AR_REPO=${REPO_NAME} AR_LOCATION=${RUN_REGION}"
     depends:
       - create_docker_repository
       - authorize_docker
