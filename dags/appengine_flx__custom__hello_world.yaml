@@ -34,7 +34,10 @@ steps:
       - prepare_work_dir
   - name: set_gcp_project
     dir: ${_DAG_WORK_DIR}
-    command: run ${_DAG_NAME} set_gcp_project "GCP_PROJECT=${GCP_PROJECT}"
+    command: run ${_DAG_NAME} clone_git_repo
+      "GIT_REPO_URL=${GIT_REPO_URL}
+      GIT_REPO_DIR=${GIT_ROOT_DIR}
+      GIT_REPO_BRANCH=master"
     depends:
       - prepare_work_dir
   - name: enable_services

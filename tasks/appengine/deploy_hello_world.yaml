@@ -18,6 +18,8 @@ tasks:
     dir: '{{.USER_WORKING_DIR}}'
     cmds: 
       - task: git:clone
+        vars:
+          GIT_BRANCH: '{{.GIT_REPO_BRANCH | default "main"}}'
 
   set_gcp_project:
     requires:

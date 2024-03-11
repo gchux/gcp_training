@@ -29,7 +29,10 @@ steps:
       chmod +x ${_DAG_CMD}
   - name: clone_git_repo
     dir: ${_DAG_WORK_DIR}
-    command: run ${_DAG_NAME} clone_git_repo "GIT_REPO_URL=${GIT_REPO_URL} GIT_REPO_DIR=${GIT_ROOT_DIR}"
+    command: run ${_DAG_NAME} clone_git_repo
+      "GIT_REPO_URL=${GIT_REPO_URL}
+      GIT_REPO_DIR=${GIT_ROOT_DIR}
+      GIT_REPO_BRANCH=main"
     depends:
       - prepare_work_dir
   - name: set_gcp_project
