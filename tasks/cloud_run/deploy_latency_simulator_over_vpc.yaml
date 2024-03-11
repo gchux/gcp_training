@@ -116,7 +116,7 @@ tasks:
         - LIVENESS_FAILURE_THRESHOLD
     dir: '{{.USER_WORKING_DIR}}'
     vars:
-      _RUN_SERVICE: '{{._ARTIFACT_NAME}}'
+      _RUN_SERVICE: '{{.LATENCY_PROFILE}}-{{._ARTIFACT_NAME}}'
       _RUN_PORT: '{{.RUN_PORT | default "8080"}}'
       _RUN_TIMEOUT: '{{.RUN_TIMEOUT | default "60"}}'
       _LATENCY_PROFILE: '{{.LATENCY_PROFILE | default "default"}}'
