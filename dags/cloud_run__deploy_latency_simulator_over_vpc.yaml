@@ -1,0 +1,176 @@
+group: cloud_run
+tags: cloud_run,step_2
+description: |-
+  https://github.com/gchux/latency-simulator/tree/demo/pcap,
+  https://github.com/gchux/latency-simulator/blob/demo/pcap/src/main/java/dev/chux/gcp/crun/internal/app/SimpleHttpRequestRestController.java#L44
+  https://cloud.google.com/run/docs/configuring/vpc-connectors,
+env:
+  - _NAMESPACE: cloud_run
+  - _TARGET: deploy_latency_simulator_over_vpc
+  - _DAG_NAME: ${_NAMESPACE}__${_TARGET}
+  - _DAG_WORK_DIR: ${_WORK_DIR}/${_DAG_NAME}
+  - _TASK_FILE: ${_TASKS_DIR}/${_NAMESPACE}/${_TARGET}.yaml
+  - _TASK_CMD: task -t ${_TASK_FILE} -v
+  - _DAG_CMD: ${_BIN_DIR}/${_DAG_NAME}
+  - GCP_PROJECT: ${GOOGLE_CLOUD_PROJECT}
+  - GIT_REPO_URL: https://github.com/gchux/latency-simulator.git
+  - GIT_REPO_BRANCH: demo/pcap
+  - GIT_ROOT_DIR: ${_DAG_WORK_DIR}/latency-simulator
+  - GIT_REPO_DIR: ${GIT_ROOT_DIR}
+  - CREATE_VPC_CONNECTOR__DAG: ${_DAGS_DIR}/serverless__create_vpc_connector.yaml
+  - DEPLOY_WEB_SERVER__DAG: ${_DAGS_DIR}/compute_engine__deploy_web_server.yaml
+params: >-
+  GCP_PROJECT=<gcp_project>
+  GCP_SERVICES=cloudbuild,artifactregistry,run,compute,vpcaccess
+  RUN_REGION=us-west2
+  RUN_PORT=8080
+  RUN_VPC_EGRESS=private-ranges-only
+  REPO_NAME=training
+  LATENCY_PROFILE=default
+  PCAP_FILTER=tcp
+  VPC_NETWORK=default
+  PRIVATE_GOOGLE_ACCESS=no
+  ENABLE_FLOW_LOGS=no
+  CONNECTOR_NAME=test-connector
+  CONNECTOR_SUBNET_NAME=connector-subnet
+  CONNECTOR_IP_RANGE=192.168.0.0/28
+  INSTANCE_NAME=web-server
+  INSTANCE_ZONE=us-west2-c
+  INSTANCE_SUBNET_NAME=web-server-subnet
+  INSTANCE_IP_RANGE=192.168.1.0/28
+steps:
+  - name: prepare_work_dir
+    command: bash
+    script: |
+      rm -f ${_DAG_CMD}
+      rm -rf ${_DAG_WORK_DIR}
+      mkdir -p ${_DAG_WORK_DIR}
+      echo -e "#!/bin/bash\n${_TASK_CMD} \$1 \$2" > ${_DAG_CMD}
+      chmod +x ${_DAG_CMD}
+  - name: clone_git_repo
+    dir: ${_DAG_WORK_DIR}
+    command: run ${_DAG_NAME}
+      clone_git_repo
+      "GIT_REPO_URL=${GIT_REPO_URL}
+      GIT_REPO_DIR=${GIT_ROOT_DIR}
+      GIT_REPO_BRANCH=${GIT_REPO_BRANCH}"
+    depends:
+      - prepare_work_dir
+  - name: set_gcp_project
+    dir: ${_DAG_WORK_DIR}
+    command: run ${_DAG_NAME} set_gcp_project "GCP_PROJECT=${GCP_PROJECT}"
+    depends:
+      - prepare_work_dir
+  - name: enable_services
+    dir: ${_DAG_WORK_DIR}
+    command: run ${_DAG_NAME} enable_services "GCP_PROJECT=${GCP_PROJECT} GCP_SERVICES=${GCP_SERVICES}"
+    depends:
+      - set_gcp_project
+  - name: create_docker_repository
+    dir: ${_DAG_WORK_DIR}
+    command: run ${_DAG_NAME} create_docker_repository "GCP_PROJECT=${GCP_PROJECT} AR_REPO=${REPO_NAME} AR_LOCATION=${RUN_REGION}"
+    depends:
+      - enable_services
+  - name: authorize_docker
+    dir: ${_DAG_WORK_DIR}
+    command: run ${_DAG_NAME} authorize_docker "GCP_PROJECT=${GCP_PROJECT} AR_LOCATION=${RUN_REGION}"
+    depends:
+      - enable_services
+  - name: build_container_image
+    dir: ${GIT_REPO_DIR}
+    command: run ${_DAG_NAME} build_container_image "GCP_PROJECT=${GCP_PROJECT} AR_REPO=${REPO_NAME} AR_LOCATION=${RUN_REGION}"
+    depends:
+      - clone_git_repo
+  - name: push_container_image
+    dir: ${GIT_REPO_DIR}
+    command: run ${_DAG_NAME} push_container_image "GCP_PROJECT=${GCP_PROJECT} AR_REPO=${REPO_NAME} AR_LOCATION=${RUN_REGION}"
+    depends:
+      - create_docker_repository
+      - authorize_docker
+      - build_container_image
+  - name: deploy_run_service
+    dir: ${GIT_REPO_DIR}
+    command: >-
+      run ${_DAG_NAME} deploy_run_service
+      "GCP_PROJECT=${GCP_PROJECT}
+      RUN_REGION=${RUN_REGION}
+      RUN_PORT=${RUN_PORT}
+      RUN_TIMEOUT=10
+      RUN_CONCURRENCY=10
+      RUN_MIN_INSTANCES=0
+      RUN_MAX_INSTANCES=1
+      AR_REPO=${REPO_NAME}
+      AR_LOCATION=${RUN_REGION}
+      LATENCY_PROFILE=${LATENCY_PROFILE}
+      PCAP_FILTER='${PCAP_FILTER}'
+      STARTUP_INITIAL_DELAY_SECS=5
+      STARTUP_TIMEOUT_SECS=5
+      STARTUP_PERIOD_SECS=10
+      STARTUP_FAILURE_THRESHOLD=5
+      LIVENESS_INITIAL_DELAY_SECS=5
+      LIVENESS_TIMEOUT_SECS=5
+      LIVENESS_PERIOD_SECS=10
+      LIVENESS_FAILURE_THRESHOLD=10"
+    depends:
+      - push_container_image
+  - name: describe_run_service
+    dir: ${GIT_REPO_DIR}
+    command: run ${_DAG_NAME} describe_run_service "GCP_PROJECT=${GCP_PROJECT} RUN_REGION=${RUN_REGION} LATENCY_PROFILE=${LATENCY_PROFILE}"
+    depends:
+      - deploy_run_service
+  - name: create_vpc_connector
+    dir: ${_DAG_WORK_DIR}
+    command: >-
+      dag ${CREATE_VPC_CONNECTOR__DAG}
+      "GCP_PROJECT=${GCP_PROJECT}
+      GCP_SERVICES=compute,vpcaccess
+      VPC_NETWORK=${VPC_NETWORK}
+      SUBNET_NAME=${CONNECTOR_SUBNET_NAME}
+      SUBNET_REGION=${RUN_REGION}
+      IP_RANGE=${CONNECTOR_IP_RANGE}
+      PRIVATE_GOOGLE_ACCESS=${PRIVATE_GOOGLE_ACCESS}
+      ENABLE_FLOW_LOGS=${ENABLE_FLOW_LOGS}
+      CONNECTOR_NAME=${CONNECTOR_NAME}
+      CONNECTOR_MIN_INSTANCES=2
+      CONNECTOR_MAX_INSTANCES=4
+      CONNECTOR_MACHINE_TYPE=f1-micro
+      VPC_EGRESS=${VPC_EGRESS}"
+    depends:
+      - push_container_image
+  - name: deploy_web_server
+    dir: ${_DAG_WORK_DIR}
+    command: >-
+      dag ${DEPLOY_WEB_SERVER__DAG}
+      "GCP_PROJECT=${GCP_PROJECT}
+      GCP_SERVICES=compute
+      VPC_NETWORK=${VPC_NETWORK}
+      SUBNET_NAME=${INSTANCE_SUBNET_NAME}
+      SUBNET_REGION=${RUN_REGION}
+      IP_RANGE=${INSTANCE_IP_RANGE}
+      PRIVATE_GOOGLE_ACCESS=${PRIVATE_GOOGLE_ACCESS}
+      ENABLE_FLOW_LOGS=${ENABLE_FLOW_LOGS}
+      INSTANCE_NAME=${INSTANCE_NAME}
+      INSTANCE_ZONE=${INSTANCE_ZONE}
+      INSTANCE_MACHINE_TYPE=e2-micro
+      INSTANCE_DISK_IMAGE=projects/ubuntu-os-cloud/global/images/ubuntu-2004-focal-v20240307b
+      INSTANCE_DISK_SIZE=10
+      INSTANCE_DISK_TYPE=pd-balanced"
+    depends:
+      - push_container_image
+  - name: update_run_service
+    command: >-
+      run ${_DAG_NAME} update_run_service
+      "GCP_PROJECT=${GCP_PROJECT}
+      RUN_REGION=${RUN_REGION}
+      LATENCY_PROFILE=${LATENCY_PROFILE}
+      VPC_CONNECTOR=${CONNECTOR_NAME}
+      VPC_EGRESS=${RUN_VPC_EGRESS}"
+    depends:
+      - deploy_run_service
+      - create_vpc_connector
+      - deploy_web_server
+  - name: describe_run_service
+    dir: ${GIT_REPO_DIR}
+    command: run ${_DAG_NAME} describe_run_service "GCP_PROJECT=${GCP_PROJECT} RUN_REGION=${RUN_REGION} LATENCY_PROFILE=${LATENCY_PROFILE}"
+    depends:
+      - update_run_service

@@ -26,12 +26,13 @@ tasks:
     dir: '{{.USER_WORKING_DIR}}'
     vars:
       _SOURCE: '{{.USER_WORKING_DIR}}'
+      _DOCKER_FILE: '{{.DOCKER_FILE | default "Dockerfile"}}'
     cmds: 
       - task: remove_image
         ignore_error: true
         vars:
           IMAGE_TAG: '{{.IMAGE_TAG}}'
-      - cmd: 'docker build --no-cache -t {{.IMAGE_TAG}} {{._SOURCE}}'
+      - cmd: 'docker build --no-cache -f {{._DOCKER_FILE}} -t {{.IMAGE_TAG}} {{._SOURCE}}'
 
   push_image:
     requires:

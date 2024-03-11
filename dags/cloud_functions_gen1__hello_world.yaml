@@ -40,7 +40,13 @@ steps:
       - set_gcp_project
   - name: deploy_function
     dir: ${GIT_REPO_DIR}
-    command: run ${_DAG_NAME} deploy_function "GCP_PROJECT=${GCP_PROJECT} FN_GENERATION=1 FN_NAME=${FN_NAME} FN_REGION=${FN_REGION} FN_RUNTIME=${FN_RUNTIME} FN_TRIGGER=http"
+    command: run ${_DAG_NAME} deploy_function
+      "GCP_PROJECT=${GCP_PROJECT}
+      FN_GENERATION=1
+      FN_NAME=${FN_NAME}
+      FN_REGION=${FN_REGION}
+      FN_RUNTIME=${FN_RUNTIME}
+      FN_TRIGGER=http"
     depends:
       - clone_git_repo
       - enable_services
