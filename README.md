@@ -26,7 +26,7 @@
 
   > see: https://dagu.readthedocs.io/en/latest/web_interface.html#id1
 
-# CONTROBUTING
+# CONTRIBUTING
 
 ## TOOLS:
 
