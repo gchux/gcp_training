@@ -156,8 +156,7 @@ steps:
       CONNECTOR_MACHINE_TYPE=${CONNECTOR_MACHINE}
       VPC_EGRESS=${VPC_EGRESS}"
     depends:
-      - clone_git_repo
-      - enable_services
+      - push_container_image
   - name: deploy_web_server
     dir: ${_DAG_WORK_DIR}
     command: >-
@@ -177,8 +176,7 @@ steps:
       INSTANCE_DISK_SIZE=${INSTANCE_DISK_SIZE}
       INSTANCE_DISK_TYPE=${INSTANCE_DISK_TYPE}"
     depends:
-      - clone_git_repo
-      - enable_services
+      - push_container_image
   - name: update_run_service
     command: >-
       run ${_DAG_NAME} update_run_service
