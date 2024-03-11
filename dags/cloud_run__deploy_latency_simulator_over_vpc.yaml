@@ -1,8 +1,9 @@
 group: cloud_run
 tags: cloud_run,step_2
 description: |-
-  https://github.com/gchux/latency-simulator,
-  https://cloud.google.com/run/docs/quickstarts/deploy-container
+  https://github.com/gchux/latency-simulator/tree/demo/pcap,
+  https://github.com/gchux/latency-simulator/blob/demo/pcap/src/main/java/dev/chux/gcp/crun/internal/app/SimpleHttpRequestRestController.java#L44
+  https://cloud.google.com/run/docs/configuring/vpc-connectors,
 env:
   - _NAMESPACE: cloud_run
   - _TARGET: deploy_latency_simulator_over_vpc

@@ -1,6 +1,6 @@
 group: cloud_functions_gen2
 tags: cloud_functions_gen2,step_1
-description: https://cloud.google.com/functions/docs/create-deploy-http-nodejs-1st-gen
+description: https://cloud.google.com/functions/docs/tutorials/http#functions-prepare-environment-python
 env:
   - _NAMESPACE: cloud_functions
   - _TARGET: deploy_hello_world
@@ -46,7 +46,14 @@ steps:
       - set_gcp_project
   - name: deploy_function
     dir: ${GIT_REPO_DIR}
-    command: run ${_DAG_NAME} deploy_function "GCP_PROJECT=${GCP_PROJECT} FN_GENERATION=2 FN_NAME=${FN_NAME} FN_REGION=${FN_REGION} FN_RUNTIME=${FN_RUNTIME} FN_TRIGGER=http FN_ENTRYPOINT=${FN_ENTRYPOINT}"
+    command: run ${_DAG_NAME} deploy_function
+      "GCP_PROJECT=${GCP_PROJECT}
+      FN_GENERATION=2
+      FN_NAME=${FN_NAME}
+      FN_REGION=${FN_REGION}
+      FN_RUNTIME=${FN_RUNTIME}
+      FN_TRIGGER=http
+      FN_ENTRYPOINT=${FN_ENTRYPOINT}"
     depends:
       - clone_git_repo
       - enable_services
