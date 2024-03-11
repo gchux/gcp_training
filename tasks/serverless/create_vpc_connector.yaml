@@ -37,4 +37,6 @@ tasks:
         - CONNECTOR_MACHINE_TYPE
     dir: '{{.USER_WORKING_DIR}}'
     cmds:
+      - cmd: 'sleep 30'
+        silent: true
       - task: gcloud_compute:networks:serverless:create_using_subnet
