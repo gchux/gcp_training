@@ -122,7 +122,7 @@ tasks:
                 "_BUILD_TAG": "\$(body.build.tag)",
                 "_GIT_REPO_URL": "\$(body.git.repo_url)"
             },
-            "tags": ['\${_BUILD_TAG}']
+            "tags": ["\${_BUILD_TAG}"]
         }
         EOF
       - task: gcloud_builds:triggers:create_webhook
