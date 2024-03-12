@@ -10,16 +10,16 @@ env:
   - _TASK_CMD: task -t ${_TASK_FILE} -v
   - _DAG_CMD: ${_BIN_DIR}/${_DAG_NAME}
   - GCP_PROJECT: ${GOOGLE_CLOUD_PROJECT}
-  - GIT_REPO_URL: https://github.com/gchux/cloud-run-ssh.git
-  - GIT_REPO_DIR: cloud-run-ssh
 params: >-
   GCP_PROJECT=<gcp_project>
   PROJECT_NUMBER=<project_number>
-  GCP_SERVICES=secretmanager,cloudbuild,artifactregistry,run
+  GCP_SERVICES=secretmanager,cloudbuild,artifactregistry
   TRIGGER_NAME=webhook-trigger
   SECRET_NAME=trigger-secret
   REPO_NAME=training
   REPO_LOCATION=us-west2
+  GIT_REPO_URL=https://github.com/gchux/cloud-run-ssh.git
+  GIT_REPO_DIR=cloud-run-ssh
   IMAGE_NAME=ssh-server
   IMAGE_TAG=latest
 steps:

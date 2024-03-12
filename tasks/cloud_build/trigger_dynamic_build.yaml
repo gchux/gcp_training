@@ -114,12 +114,14 @@ tasks:
             "options": {
                 "logging": "NONE",
                 "dynamicSubstitutions": true,
-                "automapSubstitutions": true
+                "automapSubstitutions": true,
+                "substitutionOption": "ALLOW_LOOSE"
             },
             "substitutions": {
                 "_BUILD_DIR": "\$(body.build.dir)",
                 "_BUILD_CFG": "\$(body.build.cfg)",
                 "_BUILD_SUBS": "\$(body.build.subs)",
+                "_BUILD_TAG": "\${body.build.tag}",
                 "_GIT_REPO_URL": "\$(body.git.repo_url)"
             }
         }
@@ -143,6 +145,8 @@ tasks:
     vars:
       SECRET_VALUE:
         sh: 'cat {{.SECRET_FILE}} | tr -d ''\n'''
+      BUILD_TAG:
+        sh: 'cat /proc/sys/kernel/random/uuid | tr -d ''\n'''
       API_KEY:
         sh: >-
           gcloud services api-keys list
@@ -158,9 +162,10 @@ tasks:
             "repo_url": "{{.GIT_REPO_URL}}"
           },
           "build": {
+            "tag": "{{.BUILD_TAG}}",
             "dir": "{{.GIT_REPO_DIR}}",
             "cfg": "cloudbuild.yaml",
-            "subs": "_REPO_LOCATION={{.REPO_LOCATION}},_REPO_NAME={{.REPO_NAME}},_IMAGE_NAME={{.IMAGE_NAME}},_IMAGE_TAG={{.IMAGE_TAG}}"
+            "subs": "_BUILD_TAG={{.BUILD_TAG}},_REPO_LOCATION={{.REPO_LOCATION}},_REPO_NAME={{.REPO_NAME}},_IMAGE_NAME={{.IMAGE_NAME}},_IMAGE_TAG={{.IMAGE_TAG}}"
           }
         }
         EOF
