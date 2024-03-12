@@ -94,6 +94,6 @@ steps:
   - name: wait_for_build
     dir: ${_DAG_WORK_DIR}
     command: >-
-      run ${_DAG_NAME} wait_for_buid "GCP_PROJECT=${GCP_PROJECT}"
+      run ${_DAG_NAME} wait_for_build "GCP_PROJECT=${GCP_PROJECT}"
     depends:
       - trigger_build
