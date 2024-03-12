@@ -38,7 +38,7 @@ steps:
     command: >-
       dag ${TRIGGER_DYNAMIC_BUILD__DAG}
       "GCP_PROJECT=${GCP_PROJECT}
-      PROJECT_NUMBER=<project_number>
+      PROJECT_NUMBER=${PROJECT_NUMBER}
       GCP_SERVICES=secretmanager,cloudbuild,artifactregistry
       TRIGGER_NAME=${TRIGGER_NAME}
       SECRET_NAME=${SECRET_NAME}
