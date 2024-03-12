@@ -146,7 +146,7 @@ tasks:
       API_KEY:
         sh: >-
           gcloud services api-keys list
-          --filter='restrictions.apiTargets:cloudbuild.googleapis.com'
+          --filter='restrictions.apiTargets:cloudbuild.googleapis.com AND displayName~"^Cloud Build.*"'
           --format=json | jq -crM '.[0] | .name'
           | xargs -I% gcloud services api-keys get-key-string % --format=json
           | jq -crM '.keyString' | tr -d '\n'
