@@ -68,7 +68,7 @@ steps:
     dir: ${_DAG_WORK_DIR}
     command: >-
       run ${_DAG_NAME}
-      create_build_trigger
+      create_builds_trigger
       "GCP_PROJECT=${GCP_PROJECT}
       TRIGGER_NAME=${REPO_NAME}
       SECRET_NAME=${SECRET_NAME}"
