@@ -26,7 +26,7 @@ tasks:
         {{.RUN_CMD}} services update
         {{else}}{{.RUN_CMD}}{{end}}
       _CONCURRENCY: '{{.CONCURRENCY | default "1"}}'
-      _MIN_INSTANCES: '{{.MIX_INSTANCES | default "0"}}'
+      _MIN_INSTANCES: '{{.MIN_INSTANCES | default "0"}}'
       _MAX_INSTANCES: '{{.MAX_INSTANCES | default "1"}}'
       _TIMEOUT: '{{.TIMEOUT | default "1m"}}'
       _CPU: '{{.CPU | default "1"}}'
@@ -59,7 +59,7 @@ tasks:
         --platform={{._PLATFORM}}
         --port={{._HTTP_PORT}}
         --{{if eq ._CPU_BOOST "no"}}no-{{end}}cpu-boost
-        --{{if eq ._CPU_THOTTLE "no"}}no-{{end}}cpu-throttling
+        --{{if eq ._CPU_THROTTLE "no"}}no-{{end}}cpu-throttling
         --{{if eq ._SSN_AFFINITY "no"}}no-{{end}}session-affinity
         --{{if eq ._USE_HTTP2 "no"}}no-{{end}}use-http2
         --{{if eq ._AUTHENTICATE "yes"}}no-{{end}}allow-unauthenticated

@@ -18,7 +18,7 @@ vars:
   INLINE_CONFIG: '{{.USER_WORKING_DIR}}/cloudbuild.yaml'
   SECRET_FILE: '{{.USER_WORKING_DIR}}/secret_value.txt'
   WEBHOOK_DATA: '{{.USER_WORKING_DIR}}/webhook_data.json'
-  BUILD_TAG_FILE: '{{.USER_WORKING_DIR}}/build_tag.json'
+  BUILD_TAG_FILE: '{{.USER_WORKING_DIR}}/build_tag.txt'
 
 tasks:
 
