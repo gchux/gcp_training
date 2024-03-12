@@ -189,12 +189,12 @@ tasks:
     vars:
       BUILD_TAG:
         sh: 'cat {{.BUILD_TAG_FILE}} | tr -d ''\n'''
-      BUILD_ID:
-        sh: >-
-          gcloud builds list
-          --filter='tags:{{.BUILD_TAG}}'
-          --project={{.GCP_PROJECT}}
-          --format=json | jq -crM '.[0].id'
+      BUILD_ID_CMD: >-
+        builds list --filter='tags:{{.BUILD_TAG}}
+        --project={{.GCP_PROJECT}} --format=json
+        | jq -crM '.[0].id' | tr -d '\n'
     cmds:
       - sleep 30
-      - gcloud builds log {{.BUILD_ID}} --stream
+      - |-
+        export BUILD_ID=`{{.BUILD_ID_CMD}}`
+        gcloud builds log ${.BUILD_ID} --stream
