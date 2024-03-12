@@ -24,7 +24,6 @@ params: >-
   GIT_REPO_DIR=cloud-run-ssh
   IMAGE_NAME=ssh-server
   IMAGE_TAG=latest
-  BUILD_OUTPUT=-
 steps:
   - name: prepare_work_dir
     command: bash
