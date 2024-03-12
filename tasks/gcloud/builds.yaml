@@ -1,5 +1,10 @@
 version: '3'
 
+includes:
+  gcloud_builds_triggers:
+    taskfile: 'builds_triggers.yaml'
+    aliases: [triggers]
+
 vars:
   BUILDS_CMD: 'gcloud builds'
 
