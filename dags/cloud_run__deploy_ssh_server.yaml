@@ -52,10 +52,10 @@ steps:
       BUILD_OUTPUT=${_DAG_WORK_DIR}/build_data.json"
     depends:
       - prepare_work_dir
-  - name: deploy_run_revision
+  - name: deploy_run_service
     command: >-
       run ${_DAG_NAME}
-      deploy_run_revision
+      deploy_run_service
       "GCP_PROJECT=${GCP_PROJECT}
       RUN_SERVICE=${RUN_SERVICE}
       RUN_REGION=${RUN_REGION}

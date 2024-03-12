@@ -6,7 +6,7 @@ includes:
 
 tasks:
 
-  deploy_run_revision:
+  deploy_run_service:
     requires:
       vars: 
         - GCP_PROJECT
@@ -35,7 +35,7 @@ tasks:
           SSN_AFFINITY: yes
           USE_HTTP2: no
 
-  describe_run_revision:
+  describe_run_service:
     requires:
       vars: [GCP_PROJECT, RUN_SERVICE, RUN_REGION]
     dir: '{{.USER_WORKING_DIR}}'
