@@ -197,4 +197,4 @@ tasks:
       - sleep 30
       - |-
         export BUILD_ID=`{{.BUILD_ID_CMD}}`
-        gcloud builds log ${.BUILD_ID} --stream
+        gcloud builds log ${BUILD_ID} --stream
