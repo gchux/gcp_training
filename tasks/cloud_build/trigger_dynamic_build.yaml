@@ -121,7 +121,7 @@ tasks:
                 "_BUILD_DIR": "\$(body.build.dir)",
                 "_BUILD_CFG": "\$(body.build.cfg)",
                 "_BUILD_SUBS": "\$(body.build.subs)",
-                "_BUILD_TAG": "\${body.build.tag}",
+                "_BUILD_TAG": "\$(body.build.tag)",
                 "_GIT_REPO_URL": "\$(body.git.repo_url)"
             }
         }
