@@ -62,7 +62,7 @@ tasks:
       SECRET_VALUE:
         sh: 'tr -dc A-Za-z0-9 </dev/urandom | head -c 128 | md5sum | tr -d '' \-\n'''
     cmds:
-      - echo '{{.SECRET_VALUE}}' > {{.SECRET_FILE}}
+      - echo -n '{{.SECRET_VALUE}}' > {{.SECRET_FILE}}
       - task: gcloud_secrets:create_with_file
         SECRET_FILE: '{{.SECRET_FILE}}' 
 
