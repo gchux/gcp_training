@@ -50,8 +50,8 @@ steps:
       run ${_DAG_NAME}
       create_docker_repository
       "GCP_PROJECT=${GCP_PROJECT}
-      REPO_NAME=${REPO_NAME}
-      REPO_LOCATION=${REPO_LOCATION}
+      AR_NAME=${REPO_NAME}
+      AR_LOCATION=${REPO_LOCATION}
       REPO_FORMAT=docker"
     depends:
       - enable_services
@@ -88,4 +88,5 @@ steps:
       IMAGE_NAME=${IMAGE_NAME}
       IMAGE_TAG=${IMAGE_TAG}"
     depends:
-      - create_container_image
+      - create_docker_repository
+      - create_builds_trigger
