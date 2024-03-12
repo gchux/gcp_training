@@ -1,0 +1,135 @@
+version: '3'
+
+includes:
+  gcloud_config: 
+    taskfile: "../gcloud/config.yaml"
+  gcloud_services: 
+    taskfile: "../gcloud/services.yaml"
+  gcloud_builds: 
+    taskfile: "../gcloud/builds.yaml"
+  gcloud_secrets: 
+    taskfile: "../gcloud/secrets.yaml"
+  https:
+    taskfile: "../common/https.yaml"
+
+vars:
+  INLINE_CONFIG: '{{.USER_WORKING_DIR}}/cloudbuild.yaml'
+  SECRET_FILE: '{{.USER_WORKING_DIR}}/secret_value.txt'
+  WEBHOOK_DATA: '{{.USER_WORKING_DIR}}/webhook_data.json'
+
+tasks:
+
+  set_gcp_project:
+    requires:
+      vars: [GCP_PROJECT]
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds: 
+      - task: gcloud_config:set_project
+
+  enable_services:
+    requires:
+      vars: [GCP_PROJECT, GCP_SERVICES]
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds: 
+      - task: gcloud_services:enable
+        vars:
+          SERVICES: '{{.GCP_SERVICES}}'
+
+  create_secret:
+    requires:
+      vars:
+        - GCP_PROJECT
+        - SECRET_NAME
+    dir: '{{.USER_WORKING_DIR}}'
+    vars:
+      SECRET_VALUE:
+        sh: 'tr -dc A-Za-z0-9 </dev/urandom | head -c 128 | md5sum | tr -d '' \-\n'''
+    cmds:
+      - echo '{{.SECRET_VALUE}}' > {{.SECRET_FILE}}
+      - task: gcloud_secrets:create_with_file
+        SECRET_FILE: '{{.SECRET_FILE}}' 
+
+
+  create_builds_trigger:
+    requires:
+      vars:
+        - GCP_PROJECT
+        - TRIGGER_NAME
+        - SECRET_NAME
+    dir: '{{.USER_WORKING_DIR}}'
+    vars:
+      _SECRET_VERSION: '{{.SECRET_VERSION | default "latest"}}'
+    cmds:
+      - >-
+        cat << EOF | tee {{.INLINE_CONFIG}}
+        steps:
+        - name: gcr.io/cloud-builders/git
+          args:
+            - clone
+            - '${_GIT_REPO_URL}'
+        - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+          args:
+            - gcloud
+            - builds
+            - submit
+            - '--config'
+            - '/workspace/${_BUILD_DIR}/${_BUILD_CFG}'
+            - '--substitutions'
+            - '${_BUILD_SUBS}'
+            - '--suppress-logs'
+            - '/workspace/${_BUILD_DIR}'
+        options:
+          logging: NONE
+          dynamicSubstitutions: true
+          automapSubstitutions: true
+        substitutions:
+          _BUILD_DIR: $(body.build.dir)
+          _BUILD_CFG: $(body.build.cfg)
+          _BUILD_SUBS: $(body.build.subs)
+          _GIT_REPO_URL: $(body.git.repo_url)
+        EOF
+      - task: gcloud_builds:triggers:create_webhook
+        vars:
+          SECRET_VERSION: '{{._SECRET_VERSION}}'
+          TRIGGER_SECRET: 'projects/{{.GCP_PROJECT}}/secrets/{{.SECRET_NAME}}/versions/{{._SECRET_VERSION}}'
+          INLINE_CONFIG: '{{.INLINE_CONFIG}}'
+
+  trigger_build:
+    requires:
+      vars:
+        - GCP_PROJECT
+        - TRIGGER_NAME
+        - GIT_REPO_URL
+        - GIT_REPO_DIR
+        - REPO_NAME
+        - REPO_LOCATION
+        - IMAGE_NAME
+        - IMAGE_TAG
+    vars:
+      SECRET_VALUE:
+        sh: 'cat {{.SECRET_FILE}} | tr -d ''\n'''
+    cmds:
+      - >-
+        cat << EOF | jq -crM | tee {{.WEBHOOK_DATA}}
+        {
+          "git": {
+            "repo_url": "{{.GIT_REPO_URL}}"
+          },
+          "build": {
+            "dir": "{{.GIT_REPO_DIR}}",
+            "cfg": "cloudbuild.yaml",
+            "subs": "_REPO_LOCATION={{.REPO_LOCATION}},_REPO_NAME={{.REPO_NAME}},_IMAGE_NAME={{.IMAGE_NAME}},_IMAGE_TAG={{.IMAGE_TAG}}"
+          }
+        }
+        EOF
+      - task: https:exec_post
+        vars:
+          ENDPOINT: 'cloudbuild.googleapis.com/v1/projects/{{.GCP_PROJECT}}/triggers/{{.TRIGGER_NAME}}:webhook'
+          QUERY: >-
+            name==projects/{{.GCP_PROJECT}}/locations/global/triggers/{{.TRIGGER_NAME}}
+            secret=={{.SECRET_VALUE}}
+          HEADERS: >-
+            content-type:'application/json'
+            accept:'application/json'
+            x-goog-user-project:{{.GCP_PROJECT}}
+          BODY: '@{{.WEBHOOK_DATA}}'

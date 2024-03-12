@@ -13,7 +13,12 @@ env:
   - GIT_REPO_URL: https://github.com/GoogleCloudPlatform/cloud-build-samples.git
   - GIT_ROOT_DIR: ${_DAG_WORK_DIR}/cloud-build-samples
   - GIT_REPO_DIR: ${GIT_ROOT_DIR}/quickstart-build
-params: GCP_PROJECT=<gcp_project> GCP_SERVICES=cloudbuild,artifactregistry REPO_NAME=quickstart-docker-repo REPO_LOCATION=us-west2 IMAGE_NAME=quickstart-image
+params: >-
+  GCP_PROJECT=<gcp_project>
+  GCP_SERVICES=cloudbuild,artifactregistry
+  REPO_NAME=quickstart-docker-repo
+  REPO_LOCATION=us-west2
+  IMAGE_NAME=quickstart-image
 steps:
   - name: prepare_work_dir
     command: bash
@@ -40,7 +45,7 @@ steps:
       - set_gcp_project
   - name: create_docker_repository
     dir: ${_DAG_WORK_DIR}
-    command: run ${_DAG_NAME} create_docker_repository "GCP_PROJECT=${GCP_PROJECT} REPO_NAME=${REPO_NAME} REPO_LOCATION=${REPO_LOCATION} REPO_FORMAT=${REPO_FORMAT}"
+    command: run ${_DAG_NAME} create_docker_repository "GCP_PROJECT=${GCP_PROJECT} REPO_NAME=${REPO_NAME} REPO_LOCATION=${REPO_LOCATION} REPO_FORMAT=docker"
     depends:
       - enable_services
   - name: create_container_image

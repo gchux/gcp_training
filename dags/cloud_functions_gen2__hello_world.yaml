@@ -15,7 +15,7 @@ env:
   - GIT_REPO_DIR: ${GIT_ROOT_DIR}/functions/helloworld
 params: >-
   GCP_PROJECT=<gcp_project>
-  GCP_SERVICES=cloudbuild,artifactregistry,cloudfunctions
+  GCP_SERVICES=cloudbuild,artifactregistry,cloudfunctions,run
   FN_NAME=python-http-function
   FN_REGION=us-central1
   FN_RUNTIME=python312

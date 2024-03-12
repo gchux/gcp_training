@@ -1,0 +1,29 @@
+version: '3'
+
+vars:
+  G_BUILDS_TRIGGERS_CMD: 'gcloud builds triggers'
+
+tasks:
+
+  default:
+    cmds:
+      - cmd: echo '{{.G_BUILDS_TRIGGERS_CMD}} ...'
+
+  create_webhook:
+    requires:
+      vars:
+        - GCP_PROJECT
+        - TRIGGER_NAME
+        - SECRET_NAME
+        - SECRET_VERSION
+    dir: '{{.USER_WORKING_DIR}}'
+    vars:
+      BUILD_DIR: '{{.USER_WORKING_DIR}}'
+    cmds:
+      - >-
+        {{.G_BUILDS_TRIGGERS_CMD}}
+        create webhook
+        --name={{.TRIGGER_NAME}}
+        --secret='projects/{{.GCP_PROJECT}}/secrets/{{.SECRET_NAME}}/versions/{{.SECRET_VERSION}}'
+        --inline-config={{.INLINE_CONFIG}}
+        --project={{.GCP_PROJECT}}
