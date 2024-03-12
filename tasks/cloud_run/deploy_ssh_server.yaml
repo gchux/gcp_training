@@ -44,3 +44,18 @@ tasks:
         vars:
           FORMAT: flattened
 
+  start_run_proxy:
+    requires:
+      vars:
+        - GCP_PROJECT
+        - RUN_SERVICE
+        - RUN_REGION
+        - SSH_PORT
+    dir: '{{.USER_WORKING_DIR}}'
+    cmds:
+      - gcloud run
+        services proxy
+        {{.RUN_SERVICE}}
+        --region={{.RUN_REGION}}
+        --project={{.GCP_PROJECT}}
+        --port={{.SSH_PORT}}

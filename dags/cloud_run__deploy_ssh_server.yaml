@@ -24,6 +24,7 @@ params: >-
   GIT_REPO_DIR=cloud-run-ssh
   IMAGE_NAME=ssh-server
   IMAGE_TAG=latest
+  SSH_PORT=2222
 steps:
   - name: prepare_work_dir
     command: bash
@@ -52,6 +53,7 @@ steps:
     depends:
       - prepare_work_dir
   - name: deploy_run_service
+    dir: ${_DAG_WORK_DIR}
     command: >-
       run ${_DAG_NAME}
       deploy_run_service
@@ -62,12 +64,23 @@ steps:
     depends:
       - create_container_image
   - name: describe_run_service
-    dir: ${GIT_REPO_DIR}
+    dir: ${_DAG_WORK_DIR}
     command: >-
       run ${_DAG_NAME}
       describe_run_service
       "GCP_PROJECT=${GCP_PROJECT}
       RUN_SERVICE=${RUN_SERVICE}
       RUN_REGION=${RUN_REGION}"
+    depends:
+      - deploy_run_service
+  - name: start_run_proxy
+    dir: ${_DAG_WORK_DIR}
+    command: >-
+      run ${_DAG_NAME}
+      start_run_proxy
+      "GCP_PROJECT=${GCP_PROJECT}
+      RUN_SERVICE=${RUN_SERVICE}
+      RUN_REGION=${RUN_REGION}
+      SSH_PORT=${SSH_PORT}"
     depends:
       - deploy_run_service
