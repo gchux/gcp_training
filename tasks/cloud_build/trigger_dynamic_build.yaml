@@ -145,11 +145,11 @@ tasks:
         sh: 'cat {{.SECRET_FILE}} | tr -d ''\n'''
       API_KEY:
         sh: >-
-        gcloud services api-keys list
-        --filter='restrictions.apiTargets:cloudbuild.googleapis.com'
-        --format=json | jq -crM '.[0] | .name'
-        | xargs -I% gcloud services api-keys get-key-string % --format=json
-        | jq -crM '.keyString' | tr -d '\n'
+          gcloud services api-keys list
+          --filter='restrictions.apiTargets:cloudbuild.googleapis.com'
+          --format=json | jq -crM '.[0] | .name'
+          | xargs -I% gcloud services api-keys get-key-string % --format=json
+          | jq -crM '.keyString' | tr -d '\n'
     cmds:
       - |-
         cat << EOF | jq -crM | tee {{.WEBHOOK_DATA}}
