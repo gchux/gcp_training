@@ -72,15 +72,14 @@ steps:
       create_builds_trigger
       "GCP_PROJECT=${GCP_PROJECT}
       PROJECT_NUMBER=${PROJECT_NUMBER}
-      TRIGGER_NAME=${REPO_NAME}
+      TRIGGER_NAME=${TRIGGER_NAME}
       SECRET_NAME=${SECRET_NAME}"
     depends:
       - create_secret
   - name: trigger_build
     dir: ${_DAG_WORK_DIR}
     command: >-
-      run ${_DAG_NAME}
-      trigger_build
+      run ${_DAG_NAME} trigger_build
       "GCP_PROJECT=${GCP_PROJECT}
       TRIGGER_NAME=${TRIGGER_NAME}
       GIT_REPO_URL=${GIT_REPO_URL}

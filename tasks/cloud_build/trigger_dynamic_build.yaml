@@ -168,5 +168,6 @@ tasks:
             accept:'application/json'
             x-goog-user-project:{{.GCP_PROJECT}}
           BODY: '@{{.WEBHOOK_DATA}}'
+          BEARER: 'google:access_token'
   gcloud_artifacts_repositories: 
     taskfile: "../gcloud/artifacts_repositories.yaml"
