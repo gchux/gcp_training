@@ -14,6 +14,7 @@ env:
   - GIT_REPO_DIR: cloud-run-ssh
 params: >-
   GCP_PROJECT=<gcp_project>
+  PROJECT_NUMBER=<project_number>
   GCP_SERVICES=secretmanager,cloudbuild,artifactregistry,run
   TRIGGER_NAME=webhook-trigger
   SECRET_NAME=trigger-secret
@@ -70,6 +71,7 @@ steps:
       run ${_DAG_NAME}
       create_builds_trigger
       "GCP_PROJECT=${GCP_PROJECT}
+      PROJECT_NUMBER=${PROJECT_NUMBER}
       TRIGGER_NAME=${REPO_NAME}
       SECRET_NAME=${SECRET_NAME}"
     depends:

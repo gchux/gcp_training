@@ -71,12 +71,20 @@ tasks:
     requires:
       vars:
         - GCP_PROJECT
+        - PROJECT_NUMBER
         - TRIGGER_NAME
         - SECRET_NAME
     dir: '{{.USER_WORKING_DIR}}'
     vars:
       _SECRET_VERSION: '{{.SECRET_VERSION | default "latest"}}'
+      TRIGGER_SECRET: 'projects/{{.PROJECT_NUMBER}}/secrets/{{.SECRET_NAME}}'
     cmds:
+      - >-
+        gcloud secrets
+        add-iam-policy-binding
+        {{.TRIGGER_SECRET}}
+        --member="member"
+        --role="roles/secretmanager.secretAccessor"
       - |-
         cat << EOF | yq -p json -o yaml | tee {{.INLINE_CONFIG}}
         {
@@ -119,7 +127,6 @@ tasks:
       - task: gcloud_builds:triggers:create_webhook
         vars:
           SECRET_VERSION: '{{._SECRET_VERSION}}'
-          TRIGGER_SECRET: 'projects/{{.GCP_PROJECT}}/secrets/{{.SECRET_NAME}}/versions/{{._SECRET_VERSION}}'
           INLINE_CONFIG: '{{.INLINE_CONFIG}}'
 
   trigger_build:
@@ -137,7 +144,7 @@ tasks:
       SECRET_VALUE:
         sh: 'cat {{.SECRET_FILE}} | tr -d ''\n'''
     cmds:
-      - >-
+      - |-
         cat << EOF | jq -crM | tee {{.WEBHOOK_DATA}}
         {
           "git": {
