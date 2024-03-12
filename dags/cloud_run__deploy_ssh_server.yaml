@@ -10,7 +10,7 @@ env:
   - _TASK_CMD: task -t ${_TASK_FILE} -v
   - _DAG_CMD: ${_BIN_DIR}/${_DAG_NAME}
   - GCP_PROJECT: ${GOOGLE_CLOUD_PROJECT}
-  - TRIGGER_DYNAMIC_BUILD__DAG: ${_DAGS_DIR}/cloud_build__trigger_dynamic_build.yaml.yaml
+  - TRIGGER_DYNAMIC_BUILD__DAG: ${_DAGS_DIR}/cloud_build__trigger_dynamic_build.yaml
 params: >-
   GCP_PROJECT=<gcp_project>
   PROJECT_NUMBER=<project_number>
