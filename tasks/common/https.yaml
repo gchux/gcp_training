@@ -15,7 +15,7 @@ tasks:
         {{if eq .BEARER "google:access_token"}}`gcloud auth print-access-token`
         {{else if eq .BEARER "google:identity_token"}}`gcloud auth print-identity-token`
         {{else}}''{{.BEARER}}''{{end}}{{end}}
-        --pretty=format {{if .OUTPUT}}--body{{else}}--verbose{{end}}
+        --pretty=format {{if eq .OUTPUT "-"}}--verbose{{else}}--body{{end}}
         {{.METHOD}} {{.ENDPOINT}} {{.QUERY}} {{.HEADERS}}
         {{if .BODY}}{{if hasPrefix "@" .BODY}}{{.BODY}}{{end}}{{else}}--raw='{{.BODY}}'{{end}}
         {{if eq .OUTPUT "-"}}> /dev/stdout{{else}}| tee {{.OUTPUT}}{{end}}
