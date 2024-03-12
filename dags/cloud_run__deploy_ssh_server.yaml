@@ -24,7 +24,7 @@ params: >-
   GIT_REPO_DIR=cloud-run-ssh
   IMAGE_NAME=ssh-server
   IMAGE_TAG=latest
-  BUILD_OUTPUT=${_DAG_WORK_DIR}/build_data.json
+  BUILD_OUTPUT="${_DAG_WORK_DIR}/build_data.json"
 steps:
   - name: prepare_work_dir
     command: bash
