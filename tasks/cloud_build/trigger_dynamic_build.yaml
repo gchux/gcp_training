@@ -207,4 +207,5 @@ tasks:
       - >-
         gcloud builds list --filter='tags:{{.BUILD_TAG}} AND
         images~"/{{.GCP_PROJECT}}/{{.REPO_NAME}}/{{.IMAGE_NAME}}:{{.IMAGE_TAG}}$"' 
-        --project={{.GCP_PROJECT}} --format='json(id,tags,images)' --limit=1 | jq -crM '.[0]' > {{._OUTPUT}}
+        --project={{.GCP_PROJECT}} --format='json(id,tags,images)' --limit=1
+        | jq -crM '.[0]' | tee {{._OUTPUT}}
