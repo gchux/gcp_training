@@ -78,11 +78,12 @@ tasks:
     vars:
       _SECRET_VERSION: '{{.SECRET_VERSION | default "latest"}}'
       TRIGGER_SECRET: 'projects/{{.PROJECT_NUMBER}}/secrets/{{.SECRET_NAME}}'
+      BUILD_SERVICE_AGENT: 'service-{{.PROJECT_NUMBER}}@gcp-sa-cloudbuild.iam.gserviceaccount.com'
     cmds:
       - >-
         gcloud secrets
         add-iam-policy-binding {{.TRIGGER_SECRET}}
-        --member='service-{{.PROJECT_NUMBER}}@gcp-sa-cloudbuild.iam.gserviceaccount.com'
+        --member='serviceAccount:{{.BUILD_SERVICE_AGENT}}'
         --role='roles/secretmanager.secretAccessor'
       - |-
         cat << EOF | yq -p json -o yaml | tee {{.INLINE_CONFIG}}
