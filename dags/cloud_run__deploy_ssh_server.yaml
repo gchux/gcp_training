@@ -24,7 +24,7 @@ params: >-
   GIT_REPO_DIR=cloud-run-ssh
   IMAGE_NAME=ssh-server
   IMAGE_TAG=latest
-  BUILD_OUTPUT=-
+  BUILD_OUTPUT=${_DAG_WORK_DIR}/build_data.json
 steps:
   - name: prepare_work_dir
     command: bash
@@ -49,7 +49,7 @@ steps:
       GIT_REPO_DIR=${GIT_REPO_DIR}
       IMAGE_NAME=${IMAGE_NAME}
       IMAGE_TAG=${IMAGE_TAG}
-      BUILD_OUTPUT=${_DAG_WORK_DIR}/build_data.json"
+      BUILD_OUTPUT=${BUILD_OUTPUT}"
     depends:
       - prepare_work_dir
   - name: deploy_run_service
@@ -59,7 +59,7 @@ steps:
       "GCP_PROJECT=${GCP_PROJECT}
       RUN_SERVICE=${RUN_SERVICE}
       RUN_REGION=${RUN_REGION}
-      BUILD_DATA=${_DAG_WORK_DIR}/build_data.json"
+      BUILD_DATA=${BUILD_OUTPUT}"
     depends:
       - create_container_image
   - name: describe_run_service
