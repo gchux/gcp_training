@@ -143,6 +143,13 @@ tasks:
     vars:
       SECRET_VALUE:
         sh: 'cat {{.SECRET_FILE}} | tr -d ''\n'''
+      API_KEY:
+        sh >-
+        gcloud services api-keys list
+        --filter='restrictions.apiTargets:cloudbuild.googleapis.com'
+        --format=json | jq -crM '.[0] | .name'
+        | xargs -I% gcloud services api-keys get-key-string % --format=json
+        | jq -crM '.keyString'
     cmds:
       - |-
         cat << EOF | jq -crM | tee {{.WEBHOOK_DATA}}
@@ -163,10 +170,9 @@ tasks:
           QUERY: >-
             name==projects/{{.GCP_PROJECT}}/locations/global/triggers/{{.TRIGGER_NAME}}
             secret=={{.SECRET_VALUE}}
+            key=={{.API_KEY}}
           HEADERS: >-
             content-type:'application/json'
-            accept:'application/json'
-            x-goog-user-project:{{.GCP_PROJECT}}
           BODY: '@{{.WEBHOOK_DATA}}'
           BEARER: 'google:access_token'
   gcloud_artifacts_repositories: 
