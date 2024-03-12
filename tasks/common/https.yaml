@@ -18,7 +18,7 @@ tasks:
         --pretty=format {{if .OUTPUT}}--body{{else}}--verbose{{end}}
         {{.METHOD}} {{.ENDPOINT}} {{.QUERY}} {{.HEADERS}}
         {{if .BODY}}{{if hasPrefix "@" .BODY}}{{.BODY}}{{end}}{{else}}--raw='{{.BODY}}'{{end}}
-        {{if eq .OUTPUT "-"}}> /dev/stdout{{.OUTPUT}}{{else}}| tee {{.OUTPUT}}{{end}}
+        {{if eq .OUTPUT "-"}}> /dev/stdout{{else}}| tee {{.OUTPUT}}{{end}}
 
   exec_*:
     requires:

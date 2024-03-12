@@ -23,7 +23,6 @@ params: >-
   GCP_PROJECT=<gcp_project>
   GCP_SERVICES=cloudbuild,artifactregistry,run,compute,vpcaccess
   RUN_REGION=us-west2
-  RUN_PORT=8080
   RUN_VPC_EGRESS=private-ranges-only
   REPO_NAME=training
   LATENCY_PROFILE=default
@@ -94,7 +93,7 @@ steps:
       run ${_DAG_NAME} deploy_run_service
       "GCP_PROJECT=${GCP_PROJECT}
       RUN_REGION=${RUN_REGION}
-      RUN_PORT=${RUN_PORT}
+      RUN_PORT=8080
       RUN_TIMEOUT=10
       RUN_CONCURRENCY=10
       RUN_MIN_INSTANCES=0
