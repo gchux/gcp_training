@@ -3,7 +3,7 @@ tags: cloud_build,step_1
 description: https://cloud.google.com/build/docs/build-push-docker-image
 env:
   - _NAMESPACE: cloud_build
-  - _TARGET: trigget_dynamic_build
+  - _TARGET: trigger_dynamic_build
   - _DAG_NAME: ${_NAMESPACE}__${_TARGET}
   - _DAG_WORK_DIR: ${_WORK_DIR}/${_DAG_NAME}
   - _TASK_FILE: ${_TASKS_DIR}/${_NAMESPACE}/${_TARGET}.yaml
