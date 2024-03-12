@@ -50,7 +50,7 @@ steps:
       run ${_DAG_NAME}
       create_docker_repository
       "GCP_PROJECT=${GCP_PROJECT}
-      AR_NAME=${REPO_NAME}
+      AR_REPO=${REPO_NAME}
       AR_LOCATION=${REPO_LOCATION}
       REPO_FORMAT=docker"
     depends:

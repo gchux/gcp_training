@@ -32,8 +32,8 @@ tasks:
           --location={{.REPO_LOCATION}} 
           --project={{.GCP_PROJECT}} 
           --format='json(name)' 
-          --filter='name~/{{.REPO_NAME}}$' | 
-          jq '. | length'
+          --filter='name~/{{.REPO_NAME}}$'
+          | jq '. | length'
     cmds:
       - >-
         [ {{.REPO_EXISTS}} = 0 ] &&
@@ -42,8 +42,8 @@ tasks:
         --location={{.REPO_LOCATION}}
         --description='{{.REPO_DESCRIPTION}}'
         --project={{.GCP_PROJECT}}
-        --format=json ||
-        echo "failed: projects/{{.GCP_PROJECT}}/locations/{{.REPO_LOCATION}}/repositories/{{.REPO_NAME}}"
+        --format=json
+        || echo "failed: projects/{{.GCP_PROJECT}}/locations/{{.REPO_LOCATION}}/repositories/{{.REPO_NAME}}"
 
   create:
     requires:

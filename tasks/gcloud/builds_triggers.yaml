@@ -19,11 +19,20 @@ tasks:
     dir: '{{.USER_WORKING_DIR}}'
     vars:
       BUILD_DIR: '{{.USER_WORKING_DIR}}'
+      TRIGGER_EXISTS:
+        sh: >-
+          gcloud builds triggers list
+          --region=global --format='json(name)'
+          --filter='name={{.TRIGGER_NAME}}'
+          --project={{.GCP_PROJECT}}
+          | jq -crM '. | length'
     cmds:
       - >-
+        [ {{.TRIGGER_EXISTS}} = 0 ] &&
         {{.G_BUILDS_TRIGGERS_CMD}}
         create webhook
         --name={{.TRIGGER_NAME}}
         --secret='projects/{{.GCP_PROJECT}}/secrets/{{.SECRET_NAME}}/versions/{{.SECRET_VERSION}}'
         --inline-config={{.INLINE_CONFIG}}
         --project={{.GCP_PROJECT}}
+        || echo "failed: projects/{{.GCP_PROJECT}}/locations/global/triggers/{{.TRIGGER_NAME}}"
