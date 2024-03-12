@@ -91,3 +91,9 @@ steps:
     depends:
       - create_docker_repository
       - create_builds_trigger
+  - name: wait_for_build
+    dir: ${_DAG_WORK_DIR}
+    command: >-
+      run ${_DAG_NAME} wait_for_buid "GCP_PROJECT=${GCP_PROJECT}"
+    depends:
+      - trigger_build
