@@ -1,6 +1,17 @@
 group: cloud_build
 tags: cloud_build,step_1
-description: https://cloud.google.com/build/docs/build-push-docker-image
+description: |-
+  https://cloud.google.com/build/docs/build-config-file-schema,
+  https://cloud.google.com/build/docs/building/build-containers,
+  https://cloud.google.com/build/docs/automate-builds,
+  https://cloud.google.com/build/docs/automate-builds-webhook-events?generation=1st-gen,
+  https://cloud.google.com/build/docs/api/reference/rest/v1/projects.triggers/webhook,
+  https://cloud.google.com/build/docs/configuring-builds/substitute-variable-values,
+  https://cloud.google.com/sdk/gcloud/reference/builds/submit,
+  https://cloud.google.com/sdk/gcloud/reference/builds/triggers/create/webhook,
+  https://cloud.google.com/secret-manager/docs/creating-and-accessing-secrets,
+  https://cloud.google.com/secret-manager/docs/manage-access-to-secrets,
+  https://cloud.google.com/sdk/gcloud/reference/services/api-keys/get-key-string
 env:
   - _NAMESPACE: cloud_build
   - _TARGET: trigger_dynamic_build
@@ -22,6 +33,7 @@ params: >-
   GIT_REPO_DIR=cloud-run-ssh
   IMAGE_NAME=ssh-server
   IMAGE_TAG=latest
+  BUILD_OUTPUT=-
 steps:
   - name: prepare_work_dir
     command: bash
@@ -94,6 +106,12 @@ steps:
   - name: wait_for_build
     dir: ${_DAG_WORK_DIR}
     command: >-
-      run ${_DAG_NAME} wait_for_build "GCP_PROJECT=${GCP_PROJECT}"
+      run ${_DAG_NAME}
+      wait_for_build
+      "GCP_PROJECT=${GCP_PROJECT}
+      REPO_NAME=${REPO_NAME}
+      IMAGE_NAME=${IMAGE_NAME}
+      IMAGE_TAG=${IMAGE_TAG}
+      BUILD_OUTPUT=${BUILD_OUTPUT}"
     depends:
       - trigger_build
