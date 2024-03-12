@@ -10,6 +10,7 @@ includes:
   gcloud_builds: 
   gcloud_artifacts_repositories: 
     taskfile: "../gcloud/artifacts_repositories.yaml"
+  gcloud_builds:
     taskfile: "../gcloud/builds.yaml"
   gcloud_secrets: 
     taskfile: "../gcloud/secrets.yaml"
