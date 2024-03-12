@@ -8,6 +8,8 @@ includes:
   gcloud_artifacts_repositories: 
     taskfile: "../gcloud/artifacts_repositories.yaml"
   gcloud_builds: 
+  gcloud_artifacts_repositories: 
+    taskfile: "../gcloud/artifacts_repositories.yaml"
     taskfile: "../gcloud/builds.yaml"
   gcloud_secrets: 
     taskfile: "../gcloud/secrets.yaml"
@@ -74,33 +76,44 @@ tasks:
     vars:
       _SECRET_VERSION: '{{.SECRET_VERSION | default "latest"}}'
     cmds:
-      - >-
-        cat << EOF | tee {{.INLINE_CONFIG}}
-        steps:
-        - name: gcr.io/cloud-builders/git
-          args:
-            - clone
-            - '${_GIT_REPO_URL}'
-        - name: gcr.io/google.com/cloudsdktool/cloud-sdk
-          args:
-            - gcloud
-            - builds
-            - submit
-            - '--config'
-            - '/workspace/${_BUILD_DIR}/${_BUILD_CFG}'
-            - '--substitutions'
-            - '${_BUILD_SUBS}'
-            - '--suppress-logs'
-            - '/workspace/${_BUILD_DIR}'
-        options:
-          logging: NONE
-          dynamicSubstitutions: true
-          automapSubstitutions: true
-        substitutions:
-          _BUILD_DIR: $(body.build.dir)
-          _BUILD_CFG: $(body.build.cfg)
-          _BUILD_SUBS: $(body.build.subs)
-          _GIT_REPO_URL: $(body.git.repo_url)
+      - |-
+        cat << EOF | yq -p json -o yaml | tee {{.INLINE_CONFIG}}
+        {
+            "steps": [
+                {
+                    "name": "gcr.io/cloud-builders/git",
+                    "args": [
+                        "clone",
+                        "${_GIT_REPO_URL}"
+                    ]
+                },
+                {
+                    "name": "gcr.io/google.com/cloudsdktool/cloud-sdk",
+                    "args": [
+                        "gcloud",
+                        "builds",
+                        "submit",
+                        "--config",
+                        "/workspace/${_BUILD_DIR}/${_BUILD_CFG}",
+                        "--substitutions",
+                        "${_BUILD_SUBS}",
+                        "--suppress-logs",
+                        "/workspace/${_BUILD_DIR}"
+                    ]
+                }
+            ],
+            "options": {
+                "logging": "NONE",
+                "dynamicSubstitutions": true,
+                "automapSubstitutions": true
+            },
+            "substitutions": {
+                "_BUILD_DIR": "$(body.build.dir)",
+                "_BUILD_CFG": "$(body.build.cfg)",
+                "_BUILD_SUBS": "$(body.build.subs)",
+                "_GIT_REPO_URL": "$(body.git.repo_url)"
+            }
+        }
         EOF
       - task: gcloud_builds:triggers:create_webhook
         vars:
@@ -147,3 +160,5 @@ tasks:
             accept:'application/json'
             x-goog-user-project:{{.GCP_PROJECT}}
           BODY: '@{{.WEBHOOK_DATA}}'
+  gcloud_artifacts_repositories: 
+    taskfile: "../gcloud/artifacts_repositories.yaml"
