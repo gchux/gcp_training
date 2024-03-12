@@ -81,10 +81,9 @@ tasks:
     cmds:
       - >-
         gcloud secrets
-        add-iam-policy-binding
-        {{.TRIGGER_SECRET}}
-        --member="member"
-        --role="roles/secretmanager.secretAccessor"
+        add-iam-policy-binding {{.TRIGGER_SECRET}}
+        --member='service-{{.PROJECT_NUMBER}}@gcp-sa-cloudbuild.iam.gserviceaccount.com'
+        --role='roles/secretmanager.secretAccessor'
       - |-
         cat << EOF | yq -p json -o yaml | tee {{.INLINE_CONFIG}}
         {
