@@ -7,9 +7,6 @@ includes:
     taskfile: "../gcloud/services.yaml"
   gcloud_artifacts_repositories: 
     taskfile: "../gcloud/artifacts_repositories.yaml"
-  gcloud_builds: 
-  gcloud_artifacts_repositories: 
-    taskfile: "../gcloud/artifacts_repositories.yaml"
   gcloud_builds:
     taskfile: "../gcloud/builds.yaml"
   gcloud_secrets: 
@@ -21,6 +18,7 @@ vars:
   INLINE_CONFIG: '{{.USER_WORKING_DIR}}/cloudbuild.yaml'
   SECRET_FILE: '{{.USER_WORKING_DIR}}/secret_value.txt'
   WEBHOOK_DATA: '{{.USER_WORKING_DIR}}/webhook_data.json'
+  BUILD_TAG_FILE: '{{.USER_WORKING_DIR}}/build_tag.json'
 
 tasks:
 
@@ -123,7 +121,8 @@ tasks:
                 "_BUILD_SUBS": "\$(body.build.subs)",
                 "_BUILD_TAG": "\$(body.build.tag)",
                 "_GIT_REPO_URL": "\$(body.git.repo_url)"
-            }
+            },
+            "tags": ['\${_BUILD_TAG}']
         }
         EOF
       - task: gcloud_builds:triggers:create_webhook
@@ -179,5 +178,4 @@ tasks:
           HEADERS: >-
             content-type:'application/json'
           BODY: '@{{.WEBHOOK_DATA}}'
-  gcloud_artifacts_repositories: 
-    taskfile: "../gcloud/artifacts_repositories.yaml"
+      - echo -n '{{.BUILD_TAG}}' > {{.BUILD_TAG_FILE}}
