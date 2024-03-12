@@ -85,7 +85,7 @@ tasks:
                     "name": "gcr.io/cloud-builders/git",
                     "args": [
                         "clone",
-                        "${_GIT_REPO_URL}"
+                        "\${_GIT_REPO_URL}"
                     ]
                 },
                 {
@@ -95,11 +95,11 @@ tasks:
                         "builds",
                         "submit",
                         "--config",
-                        "/workspace/${_BUILD_DIR}/${_BUILD_CFG}",
+                        "/workspace/\${_BUILD_DIR}/\${_BUILD_CFG}",
                         "--substitutions",
-                        "${_BUILD_SUBS}",
+                        "\${_BUILD_SUBS}",
                         "--suppress-logs",
-                        "/workspace/${_BUILD_DIR}"
+                        "/workspace/\${_BUILD_DIR}"
                     ]
                 }
             ],
@@ -109,10 +109,10 @@ tasks:
                 "automapSubstitutions": true
             },
             "substitutions": {
-                "_BUILD_DIR": "$(body.build.dir)",
-                "_BUILD_CFG": "$(body.build.cfg)",
-                "_BUILD_SUBS": "$(body.build.subs)",
-                "_GIT_REPO_URL": "$(body.git.repo_url)"
+                "_BUILD_DIR": "\$(body.build.dir)",
+                "_BUILD_CFG": "\$(body.build.cfg)",
+                "_BUILD_SUBS": "\$(body.build.subs)",
+                "_GIT_REPO_URL": "\$(body.git.repo_url)"
             }
         }
         EOF
