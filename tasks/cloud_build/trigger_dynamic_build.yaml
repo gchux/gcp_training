@@ -190,13 +190,14 @@ tasks:
         - IMAGE_TAG
     dir: '{{.USER_WORKING_DIR}}'
     vars:
+      _BUILD_DATA: '{{.USER_WORKING_DIR}}/build_data.json'
       OUTPUT: '{{.BUILD_OUTPUT | default "-"}}'
-      _OUTPUT: '{{if eq .OUTPUT "-"}}{{.USER_WORKING_DIR}}/build_data.json{{else}}{{.OUTPUT}}{{end}}'
+      _OUTPUT: '{{if eq .OUTPUT "-"}}{{._BUILD_DATA}}{{else}}{{.OUTPUT}}{{end}}'
       BUILD_TAG:
         sh: 'cat {{.BUILD_TAG_FILE}} | tr -d ''\n'''
       BUILD_ID_CMD: >-
         gcloud builds list --filter='tags:{{.BUILD_TAG}}'
-        --project={{.GCP_PROJECT}} --format=json
+        --project={{.GCP_PROJECT}} --format='json(id)'
         | jq -crM '.[0].id' | tr -d '\n'
     cmds:
       - sleep 30
