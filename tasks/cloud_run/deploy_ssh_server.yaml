@@ -54,8 +54,9 @@ tasks:
         - SSH_PORT
     dir: '{{.USER_WORKING_DIR}}'
     cmds:
-      - echo 'go to: https://{{.SSH_PORT}}-{{.SSH_HOST}}/'
-      - gcloud run
+      - 'echo "go to: https://{{.SSH_PORT}}-{{.SSH_HOST}}/"'
+      - >-
+        gcloud run
         services proxy
         {{.RUN_SERVICE}}
         --region={{.RUN_REGION}}
