@@ -190,7 +190,7 @@ tasks:
       BUILD_TAG:
         sh: 'cat {{.BUILD_TAG_FILE}} | tr -d ''\n'''
       BUILD_ID_CMD: >-
-        gcloud builds list --filter='tags:{{.BUILD_TAG}}
+        gcloud builds list --filter='tags:{{.BUILD_TAG}}'
         --project={{.GCP_PROJECT}} --format=json
         | jq -crM '.[0].id' | tr -d '\n'
     cmds:
