@@ -71,4 +71,4 @@ steps:
       RUN_SERVICE=${RUN_SERVICE}
       RUN_REGION=${RUN_REGION}"
     depends:
-      - deploy_run_revision
+      - deploy_run_service
